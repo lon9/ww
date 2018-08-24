@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lon9/ww/game"
+
 	"github.com/jroimartin/gocui"
 	pb "github.com/lon9/ww/proto"
 	"github.com/lon9/ww/viewmanagers"
@@ -32,6 +34,7 @@ type Client struct {
 	players    []*pb.Player
 	state      pb.State
 	mu         *sync.Mutex
+	personer   game.Personer
 }
 
 func NewClient() *Client {
@@ -139,6 +142,9 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
 		c.mu.Unlock()
+		g.Update(func(g *gocui.Gui) error {
+			return c.updateState(g)
+		})
 	}
 }
 
@@ -170,11 +176,23 @@ func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
 			if err != nil {
 				return err
 			}
+			c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
+			id, err := uuid.FromString(res.GetUuid())
+			if err != nil {
+				return err
+			}
+			c.personer.SetUUID(id)
 			c.setDefaultView(g)
 			// Reset dialog
 			v.Clear()
 			v.Editable = false
 			g.DeleteKeybindings(DialogViewID)
+
+			mainView, err := g.View(MainViewID)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(mainView, c.personer)
 			return nil
 		}); err != nil {
 			return err

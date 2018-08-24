@@ -10,6 +10,7 @@ import (
 type Personer interface {
 	GetID() int
 	GetUUID() uuid.UUID
+	SetUUID(uuid.UUID)
 	GetKind() pb.Kind
 	GetCamp() pb.Camp
 	GetName() string
@@ -33,6 +34,10 @@ func (p *Person) GetID() int {
 
 func (p *Person) GetUUID() uuid.UUID {
 	return p.UUID
+}
+
+func (p *Person) SetUUID(id uuid.UUID) {
+	p.UUID = id
 }
 
 func (p *Person) GetKind() pb.Kind {

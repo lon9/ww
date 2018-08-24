@@ -11,17 +11,30 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const NumPlayers = 10
+const NumPlayers = 3
 const NumWarewolf = 2
 const NumTeller = 1
 const NumKnight = 1
 
+type connectionEntry struct {
+	Name    string
+	ResChan chan game.Personer
+}
+
 type Server struct {
-	people []game.Personer
+	people              []game.Personer
+	state               pb.State
+	connectionQueue     chan *connectionEntry
+	stateQueue          chan chan bool
+	stateBroadcastChans []chan bool
 }
 
 func NewTestServer() *Server {
-	return &Server{}
+	return &Server{
+		state:           pb.State_AFTER,
+		connectionQueue: make(chan *connectionEntry),
+		stateQueue:      make(chan chan bool),
+	}
 }
 
 func (s *Server) Run(port string) {
@@ -33,21 +46,67 @@ func (s *Server) Run(port string) {
 	pb.RegisterWWServer(grpcServer, s)
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
+	go func() {
+		defer close(s.connectionQueue)
+		numConnected := 0
+		for entry := range s.connectionQueue {
+			player := game.NewPersoner(numConnected, entry.Name, pb.Kind_CITIZEN)
+			s.people = append(s.people, player)
+			entry.ResChan <- player
+			numConnected++
+			if numConnected == NumPlayers {
+				break
+			}
+		}
+	}()
+	go func() {
+		defer close(s.stateQueue)
+		numConnected := 0
+		for ch := range s.stateQueue {
+			s.stateBroadcastChans = append(s.stateBroadcastChans, ch)
+			numConnected++
+			if numConnected == NumPlayers {
+				break
+			}
+		}
+		s.state = pb.State_NIGHT
+	}()
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
 
 func (s *Server) Hello(ctx xcontext.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
-	player := game.NewPersoner(1, req.GetName(), pb.Kind_CITIZEN)
-	s.people = append(s.people, player)
+	entry := &connectionEntry{
+		Name:    req.GetName(),
+		ResChan: make(chan game.Personer),
+	}
+	defer close(entry.ResChan)
+	s.connectionQueue <- entry
+	player := <-entry.ResChan
 	res := &pb.HelloResponse{
-		Uuid:  player.GetUUID().String(),
-		Name:  player.GetName(),
-		Kind:  player.GetKind(),
-		State: s.getStateFromPeople(),
+		Id:   int32(player.GetID()),
+		Uuid: player.GetUUID().String(),
+		Name: player.GetName(),
+		Kind: player.GetKind(),
 	}
 	return res, nil
+}
+func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
+	ch := make(chan bool)
+	defer close(ch)
+	s.stateQueue <- ch
+	for range ch {
+		res := &pb.StateResponse{
+			State:   s.state,
+			Players: s.convertPeople2Players(),
+		}
+		if err := stream.Send(res); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *Server) Bite(ctx xcontext.Context, req *pb.BiteRequest) (*pb.BiteResponse, error) {
@@ -70,15 +129,21 @@ func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepRes
 	return nil, nil
 }
 
-func (s *Server) getStateFromPeople() *pb.State {
-	state := new(pb.State)
+func (s *Server) convertPeople2Players() []*pb.Player {
+	var players []*pb.Player
 	for _, v := range s.people {
 		player := &pb.Player{
 			Id:     int32(v.GetID()),
 			Name:   v.GetName(),
 			IsDead: v.GetIsDead(),
 		}
-		state.Players = append(state.Players, player)
+		players = append(players, player)
 	}
-	return state
+	return players
+}
+
+func (s *Server) notifyChangeState() {
+	for i := range s.stateBroadcastChans {
+		s.stateBroadcastChans[i] <- true
+	}
 }
