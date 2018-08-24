@@ -21,7 +21,6 @@ func (w *LeftView) Layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Title = w.Name
 		v.Wrap = true
 		v.Editable = w.Editable
 	}

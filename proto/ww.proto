@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package ww;
+
+option go_package = "proto";
+
+service WW{
+  rpc Hello(HelloRequest)returns (HelloResponse);
+  rpc State(StateRequest)returns (stream StateResponse);
+  rpc Vote(VoteRequest)returns (VoteResponse);
+  rpc Bite(BiteRequest)returns (BiteResponse);
+  rpc Protect(ProtectRequest)returns (ProtectResponse);
+  rpc Tell(TellRequest)returns (TellResponse);
+  rpc Sleep(SleepRequest)returns (SleepResponse);
+}
+
+enum Camp{
+  GOOD = 0;
+  EVIL = 1;
+}
+
+enum Kind{
+  CITIZEN = 0;
+  WAREWOLF = 1;
+  TELLER = 2;
+  KNIGHT = 3;
+}
+
+enum State{
+  BEFORE = 0;
+  MORNING = 1;
+  NIGHT = 2;
+  AFTER = 3;
+}
+
+message HelloRequest{
+  string name = 1;
+}
+
+message HelloResponse{
+  string uuid = 1;
+  string name = 2;
+  Kind kind = 3;
+}
+
+message StateRequest{
+
+}
+
+message StateResponse{
+  State state = 1;
+  repeated Player players = 2;
+}
+
+message VoteRequest{
+  string src_uuid = 1;
+  int32 dst_id = 2;
+}
+
+message VoteResponse{
+}
+
+message BiteRequest{
+  string src_uuid = 1;
+  int32 dst_id = 2;
+}
+
+message BiteResponse{
+}
+
+message ProtectRequest{
+  string src_uuid = 1;
+  int32 dst_id = 2;
+}
+
+message ProtectResponse{
+}
+
+message TellRequest{
+  string src_uuid = 1;
+  int32 dst_id = 2;
+}
+
+message TellResponse{
+  Camp camp = 1;
+}
+
+message SleepRequest{
+
+}
+
+message SleepResponse{
+}
+
+
+message Player{
+  int32 id = 1;
+  string uuid = 2;
+  bool is_dead = 3;
+  string name = 4;
+}
