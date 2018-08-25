@@ -11,9 +11,16 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const NumPlayers = 3
+// NumPlayers is the number of players
+const NumPlayers = 1
+
+// NumWarewolf is the number of warewolfs
 const NumWarewolf = 2
+
+// NumTeller is the number of fortune tellers
 const NumTeller = 1
+
+// NumKnight is the number of knights
 const NumKnight = 1
 
 type connectionEntry struct {
@@ -21,6 +28,7 @@ type connectionEntry struct {
 	ResChan chan game.Personer
 }
 
+// Server is struct for server
 type Server struct {
 	people              []game.Personer
 	state               pb.State
@@ -29,6 +37,7 @@ type Server struct {
 	stateBroadcastChans []chan bool
 }
 
+// NewTestServer constructor for test server
 func NewTestServer() *Server {
 	return &Server{
 		state:           pb.State_AFTER,
@@ -37,8 +46,9 @@ func NewTestServer() *Server {
 	}
 }
 
+// Run runs server
 func (s *Server) Run(port string) {
-	lis, err := net.Listen("tcp", ":"+port)
+	lis, err := net.Listen("tcp", "0.0.0.0:"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -46,6 +56,8 @@ func (s *Server) Run(port string) {
 	pb.RegisterWWServer(grpcServer, s)
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
+
+	// Waiting for hello request
 	go func() {
 		defer close(s.connectionQueue)
 		numConnected := 0
@@ -54,11 +66,14 @@ func (s *Server) Run(port string) {
 			s.people = append(s.people, player)
 			entry.ResChan <- player
 			numConnected++
+			log.Printf("%s is connected", player.GetName())
 			if numConnected == NumPlayers {
 				break
 			}
 		}
 	}()
+
+	// Waiting for state request
 	go func() {
 		defer close(s.stateQueue)
 		numConnected := 0
@@ -69,13 +84,15 @@ func (s *Server) Run(port string) {
 				break
 			}
 		}
-		s.state = pb.State_NIGHT
+		log.Println("All players ready")
+		s.changeState(pb.State_NIGHT)
 	}()
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
 
+// Hello handles Hello request
 func (s *Server) Hello(ctx xcontext.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
 	entry := &connectionEntry{
 		Name:    req.GetName(),
@@ -92,6 +109,8 @@ func (s *Server) Hello(ctx xcontext.Context, req *pb.HelloRequest) (*pb.HelloRes
 	}
 	return res, nil
 }
+
+// State handles State request
 func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 	ch := make(chan bool)
 	defer close(ch)
@@ -109,22 +128,27 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 	return nil
 }
 
+// Bite handles Bite request
 func (s *Server) Bite(ctx xcontext.Context, req *pb.BiteRequest) (*pb.BiteResponse, error) {
 	return nil, nil
 }
 
+// Vote handles Vote request
 func (s *Server) Vote(ctx xcontext.Context, req *pb.VoteRequest) (*pb.VoteResponse, error) {
 	return nil, nil
 }
 
+// Protect handles Protect request
 func (s *Server) Protect(ctx xcontext.Context, req *pb.ProtectRequest) (*pb.ProtectResponse, error) {
 	return nil, nil
 }
 
+// Tell handles Tell request
 func (s *Server) Tell(ctx xcontext.Context, req *pb.TellRequest) (*pb.TellResponse, error) {
 	return nil, nil
 }
 
+// Sleep handles Sleep request
 func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepResponse, error) {
 	return nil, nil
 }
@@ -142,7 +166,8 @@ func (s *Server) convertPeople2Players() []*pb.Player {
 	return players
 }
 
-func (s *Server) notifyChangeState() {
+func (s *Server) changeState(state pb.State) {
+	s.state = state
 	for i := range s.stateBroadcastChans {
 		s.stateBroadcastChans[i] <- true
 	}

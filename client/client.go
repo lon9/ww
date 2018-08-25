@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lon9/ww/consts"
 	"github.com/lon9/ww/game"
 
 	"github.com/jroimartin/gocui"
@@ -19,14 +20,21 @@ import (
 )
 
 const (
-	MainViewID       = "main_view"
-	LeftViewID       = "left_view"
-	RightViewID      = "right_view"
-	DialogViewID     = "dialog_view"
-	DefaultViewID    = MainViewID
+	// MainViewID is ID for main view
+	MainViewID = "main_view"
+	// LeftViewID is ID for left view
+	LeftViewID = "left_view"
+	// RightViewID is ID for right view
+	RightViewID = "right_view"
+	// DialogViewID is ID for dialog view
+	DialogViewID = "dialog_view"
+	// DefaultViewID is ID for default view
+	DefaultViewID = MainViewID
+	// DefaultViewIndex is index for default view
 	DefaultViewIndex = 1
 )
 
+// Client is struct for client
 type Client struct {
 	clientUUID uuid.UUID
 	managers   []viewmanagers.ViewManager
@@ -37,12 +45,14 @@ type Client struct {
 	personer   game.Personer
 }
 
+// NewClient is constructor
 func NewClient() *Client {
 	return &Client{
 		mu: new(sync.Mutex),
 	}
 }
 
+// Run runs client
 func (c *Client) Run(addr, port string) {
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -150,13 +160,14 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 
 func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
 
+	// Connect to server, sending hello request
 	g.Update(func(g *gocui.Gui) error {
 		v, err := c.setCurrentViewOnTop(g, DialogViewID)
 		if err != nil {
 			return err
 		}
 		v.Clear()
-		v.Title = "Put your name"
+		v.Title = "Put your name and press enter"
 		v.Editable = true
 		if err := g.SetKeybinding(DialogViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
 
@@ -176,23 +187,34 @@ func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
 			if err != nil {
 				return err
 			}
+
+			// Initialize personer
 			c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
 			id, err := uuid.FromString(res.GetUuid())
 			if err != nil {
 				return err
 			}
 			c.personer.SetUUID(id)
-			c.setDefaultView(g)
+
 			// Reset dialog
 			v.Clear()
 			v.Editable = false
 			g.DeleteKeybindings(DialogViewID)
 
-			mainView, err := g.View(MainViewID)
+			mainView, err := c.setDefaultView(g)
 			if err != nil {
 				return err
 			}
-			fmt.Fprint(mainView, c.personer)
+			kind, err := consts.GetKind(c.personer.GetKind())
+			if err != nil {
+				return err
+			}
+			camp, err := consts.GetCamp(c.personer.GetCamp())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
+			go c.stateLoop(g, client)
 			return nil
 		}); err != nil {
 			return err
@@ -208,6 +230,13 @@ func (c *Client) updateState(g *gocui.Gui) error {
 		return err
 	}
 	v.Clear()
-	fmt.Fprint(v, c.state)
+	for _, player := range c.players {
+		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+		if player.GetIsDead() {
+			fmt.Fprintf(v, "Dead")
+		} else {
+			fmt.Fprintf(v, "Alive")
+		}
+	}
 	return nil
 }
