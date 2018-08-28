@@ -206,11 +206,11 @@ func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 
 	// If already dead
 	if p.GetIsDead() {
-		viewmanagers.DrawDeadView(g)
+		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
 		return
 	}
 
-	// Send sleep request
+	// Sending sleep request
 	ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
 	defer cancel()
 	_, err := c.Sleep(ctx, new(pb.SleepRequest))
@@ -236,7 +236,7 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 
 	// If already dead
 	if p.GetIsDead() {
-		viewmanagers.DrawDeadView(g)
+		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
 		return
 	}
 
@@ -255,42 +255,26 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 		time.Sleep(1 * time.Second)
 	}
 
+	// Make player list that excludes myself and dead peoples
+	var selectablePlayers []*pb.Player
+	for _, player := range players {
+		if !player.GetIsDead() && int(player.GetId()) != p.GetID() {
+			selectablePlayers = append(selectablePlayers, player)
+		}
+	}
+
 	// Vote a player
-	g.Update(func(g *gocui.Gui) error {
-		mainView, err := g.View(viewmanagers.MainViewID)
-		if err != nil {
-			return err
-		}
-		mainView.Clear()
-		fmt.Fprintln(mainView, "Vote a player")
-		for _, player := range players {
-			if !player.GetIsDead() && int(player.GetId()) != p.GetID() {
-				fmt.Fprintf(mainView, "%d: %s\n", player.GetId(), player.GetName())
-			}
-		}
-		mainView.Highlight = true
-		mainView.BgColor = gocui.ColorWhite
-		if err := mainView.SetCursor(0, 1); err != nil {
-			return err
-		}
-		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowDown, gocui.ModNone, viewmanagers.CursorDown)
-		if err != nil {
-			return err
-		}
-		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowRight, gocui.ModNone, viewmanagers.CursorUp)
-		if err != nil {
-			return err
-		}
-		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-			index := viewmanagers.GetLineIndex(v)
-			if index < 0 || index > len(players) {
-				return errors.New("Index out of range")
-			}
+	p.drawSelectablePlayerList(
+		g,
+		viewmanagers.MainViewID,
+		"Vote a player",
+		selectablePlayers,
+		func(g *gocui.Gui, v *gocui.View, selected *pb.Player) error {
 
 			// Sending vote request
 			req := &pb.VoteRequest{
 				SrcUuid: p.GetUUID().String(),
-				DstId:   players[index].GetId(),
+				DstId:   selected.GetId(),
 			}
 			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
 			defer cancel()
@@ -304,7 +288,55 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 			fmt.Fprintln(v, "Waiting for other players")
 			return nil
 		})
-		return nil
+}
+
+func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
+	viewID,
+	msg string,
+	players []*pb.Player,
+	onSelected func(g *gocui.Gui, v *gocui.View, player *pb.Player) error) {
+
+	g.Update(func(g *gocui.Gui) error {
+		v, err := g.View(viewID)
+		if err != nil {
+			return err
+		}
+		v.Clear()
+
+		// Message
+		fmt.Fprintln(v, msg)
+
+		// Player list
+		for _, player := range players {
+			fmt.Fprintf(v, "%d: %s\n", player.GetId(), player.GetName())
+		}
+		v.Highlight = true
+		v.BgColor = gocui.ColorWhite
+
+		// Setting selector to top of selectable
+		if err := v.SetCursor(0, 1); err != nil {
+			return err
+		}
+
+		// Setting key bindings
+		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowDown, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+			return viewmanagers.CursorDownWithRange(v, 1+len(players))
+		}); err != nil {
+			return err
+		}
+		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowRight, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+			return viewmanagers.CursorUpWithRange(v, 1)
+		}); err != nil {
+			return err
+		}
+		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+			index := viewmanagers.GetLineIndex(v)
+			if index < 1 || index > len(players)+1 {
+				return errors.New("Index out of range")
+			}
+			return onSelected(g, v, players[index])
+		})
+		return err
 	})
 }
 
