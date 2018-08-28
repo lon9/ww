@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"strconv"
 	"sync"
 	"testing"
@@ -10,8 +11,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+var s *Server
+
 func prepareServer() {
-	s := NewTestServer()
+	s = NewTestServer()
 	go s.Run("9999")
 }
 
@@ -37,9 +40,29 @@ func TestConnection(t *testing.T) {
 			if res.GetName() != req.GetName() {
 				t.Errorf("Name is invalid %s:%s", res.GetName(), req.GetName())
 			}
-			t.Log(res)
+
+			stream, err := client.State(xcontext.Background(), new(pb.StateRequest))
+			if err != nil {
+				t.Error(err)
+			}
+			defer stream.CloseSend()
+			stateRes, err := stream.Recv()
+			if err != nil && err != io.EOF {
+				t.Error(err)
+			}
+			if len(stateRes.GetPlayers()) != 10 {
+				t.Errorf("The number of players should be 10: %d", len(stateRes.GetPlayers()))
+			}
+			if stateRes.GetState() != pb.State_NIGHT {
+				t.Errorf("State should be night: %v", stateRes.GetState())
+			}
+
 			wg.Done()
 		}(i, t)
 	}
 	wg.Wait()
+}
+
+func TestBiteOne(t *testing.T) {
+	prepareServer()
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"net"
@@ -186,8 +185,6 @@ func (s *Server) Hello(ctx xcontext.Context, req *pb.HelloRequest) (*pb.HelloRes
 	defer close(entry.ResChan)
 	s.connectionQueue <- entry
 	player := <-entry.ResChan
-	fmt.Println(int32(player.GetID()))
-	fmt.Println(player.GetKind())
 	res := &pb.HelloResponse{
 		Id:   int32(player.GetID()),
 		Uuid: player.GetUUID().String(),
