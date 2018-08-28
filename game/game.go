@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/lon9/ww/consts"
+
 	"github.com/jroimartin/gocui"
 	pb "github.com/lon9/ww/proto"
 	"github.com/lon9/ww/viewmanagers"
@@ -311,7 +313,8 @@ func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 			fmt.Fprintf(v, "%d: %s\n", player.GetId(), player.GetName())
 		}
 		v.Highlight = true
-		v.BgColor = gocui.ColorWhite
+		v.SelBgColor = gocui.ColorGreen
+		v.SelFgColor = gocui.ColorBlack
 
 		// Setting selector to top of selectable
 		if err := v.SetCursor(0, 1); err != nil {
@@ -320,21 +323,21 @@ func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 
 		// Setting key bindings
 		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowDown, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-			return viewmanagers.CursorDownWithRange(v, 1+len(players))
+			return viewmanagers.CursorDownWithRange(v, len(players))
 		}); err != nil {
 			return err
 		}
-		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowRight, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowUp, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
 			return viewmanagers.CursorUpWithRange(v, 1)
 		}); err != nil {
 			return err
 		}
 		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
 			index := viewmanagers.GetLineIndex(v)
-			if index < 1 || index > len(players)+1 {
+			if index < 1 || index > len(players) {
 				return errors.New("Index out of range")
 			}
-			return onSelected(g, v, players[index])
+			return onSelected(g, v, players[index+1])
 		})
 		return err
 	})
@@ -446,7 +449,49 @@ func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 		}
 		return nil
 	})
+}
 
+// NightAction is action at night (Override)
+func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	// If already dead
+	if w.GetIsDead() {
+		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		return
+	}
+
+	// Make player list that excludes myself and dead peoples and my kind
+	var selectablePlayers []*pb.Player
+	for _, player := range players {
+		if !player.GetIsDead() && int(player.GetId()) != w.GetID() && player.GetKind() != pb.Kind_WAREWOLF {
+			selectablePlayers = append(selectablePlayers, player)
+		}
+	}
+
+	w.drawSelectablePlayerList(
+		g,
+		viewmanagers.MainViewID,
+		"Select a player you want to bite",
+		selectablePlayers,
+		func(g *gocui.Gui, v *gocui.View, selected *pb.Player) error {
+
+			// Sending bite request
+			req := &pb.BiteRequest{
+				SrcUuid: w.GetUUID().String(),
+				DstId:   selected.GetId(),
+			}
+			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+			defer cancel()
+
+			_, err := c.Bite(ctx, req)
+			if err != nil {
+				return err
+			}
+			g.DeleteKeybindings(viewmanagers.MainViewID)
+			v.Highlight = false
+			v.Clear()
+			fmt.Fprintf(v, "You'll bite a player named %s (%d)\n", selected.GetName(), selected.GetId())
+			return nil
+		})
 }
 
 // Teller is struct for Teller
@@ -454,9 +499,99 @@ type Teller struct {
 	Person
 }
 
+// NightAction is action at night (Override)
+func (t *Teller) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	// If already dead
+	if t.GetIsDead() {
+		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		return
+	}
+
+	// Make player list that excludes myself and dead peoples and my kind
+	var selectablePlayers []*pb.Player
+	for _, player := range players {
+		if !player.GetIsDead() && int(player.GetId()) != t.GetID() {
+			selectablePlayers = append(selectablePlayers, player)
+		}
+	}
+
+	t.drawSelectablePlayerList(
+		g,
+		viewmanagers.MainViewID,
+		"Select a player you want to tell",
+		selectablePlayers,
+		func(g *gocui.Gui, v *gocui.View, selected *pb.Player) error {
+
+			// Sending tell request
+			req := &pb.TellRequest{
+				SrcUuid: t.GetUUID().String(),
+				DstId:   selected.GetId(),
+			}
+			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+			defer cancel()
+
+			res, err := c.Tell(ctx, req)
+			if err != nil {
+				return err
+			}
+			g.DeleteKeybindings(viewmanagers.MainViewID)
+			v.Highlight = false
+			v.Clear()
+			camp, err := consts.GetCamp(res.GetCamp())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(v, "%s (%d) is %s\n", selected.GetName(), selected.GetId(), camp)
+			return nil
+		})
+}
+
 // Knight is struct for Kinght
 type Knight struct {
 	Person
+}
+
+// NightAction is action at night (Override)
+func (k *Knight) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	// If already dead
+	if k.GetIsDead() {
+		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		return
+	}
+
+	// Make player list that excludes myself and dead peoples and my kind
+	var selectablePlayers []*pb.Player
+	for _, player := range players {
+		if !player.GetIsDead() && int(player.GetId()) != k.GetID() {
+			selectablePlayers = append(selectablePlayers, player)
+		}
+	}
+
+	k.drawSelectablePlayerList(
+		g,
+		viewmanagers.MainViewID,
+		"Select a player you want to protect",
+		selectablePlayers,
+		func(g *gocui.Gui, v *gocui.View, selected *pb.Player) error {
+
+			// Sending protect request
+			req := &pb.ProtectRequest{
+				SrcUuid: k.GetUUID().String(),
+				DstId:   selected.GetId(),
+			}
+			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+			defer cancel()
+
+			_, err := c.Protect(ctx, req)
+			if err != nil {
+				return err
+			}
+			g.DeleteKeybindings(viewmanagers.MainViewID)
+			v.Highlight = false
+			v.Clear()
+			fmt.Fprintf(v, "You'll protect a player named %s (%d)", selected.GetName(), selected.GetId())
+			return nil
+		})
 }
 
 // Personers is slice of Personer
