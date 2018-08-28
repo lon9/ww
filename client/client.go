@@ -19,21 +19,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	// MainViewID is ID for main view
-	MainViewID = "main_view"
-	// LeftViewID is ID for left view
-	LeftViewID = "left_view"
-	// RightViewID is ID for right view
-	RightViewID = "right_view"
-	// DialogViewID is ID for dialog view
-	DialogViewID = "dialog_view"
-	// DefaultViewID is ID for default view
-	DefaultViewID = MainViewID
-	// DefaultViewIndex is index for default view
-	DefaultViewIndex = 1
-)
-
 // Client is struct for client
 type Client struct {
 	clientUUID uuid.UUID
@@ -61,10 +46,10 @@ func (c *Client) Run(addr, port string) {
 	defer g.Close()
 
 	// Initialize views
-	mainView := viewmanagers.NewMainView(MainViewID, false)
-	leftView := viewmanagers.NewLeftView(LeftViewID, false)
-	rightView := viewmanagers.NewRightView(RightViewID, true)
-	dialogView := viewmanagers.NewDialogView(DialogViewID, true)
+	mainView := viewmanagers.NewMainView(viewmanagers.MainViewID, false)
+	leftView := viewmanagers.NewLeftView(viewmanagers.LeftViewID, false)
+	rightView := viewmanagers.NewRightView(viewmanagers.RightViewID, true)
+	dialogView := viewmanagers.NewDialogView(viewmanagers.DialogViewID, true)
 
 	// Add view managers
 	c.managers = append(c.managers, leftView)
@@ -115,11 +100,11 @@ func (c *Client) setCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, er
 }
 
 func (c *Client) setDefaultView(g *gocui.Gui) (*gocui.View, error) {
-	v, err := c.setCurrentViewOnTop(g, DefaultViewID)
+	v, err := c.setCurrentViewOnTop(g, viewmanagers.DefaultViewID)
 	if err != nil {
 		return nil, err
 	}
-	c.activeView = DefaultViewIndex
+	c.activeView = viewmanagers.DefaultViewIndex
 	return v, nil
 }
 
@@ -144,7 +129,9 @@ func (c *Client) nextView(g *gocui.Gui, v *gocui.View) error {
 func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 	ctx, cancel := xcontext.WithCancel(context.Background())
 	defer cancel()
-	stream, err := client.State(ctx, new(pb.StateRequest))
+	stream, err := client.State(ctx, &pb.StateRequest{
+		Uuid: c.personer.GetUUID().String(),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -170,14 +157,14 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 
 	// Connect to server, sending hello request
 	g.Update(func(g *gocui.Gui) error {
-		v, err := c.setCurrentViewOnTop(g, DialogViewID)
+		v, err := c.setCurrentViewOnTop(g, viewmanagers.DialogViewID)
 		if err != nil {
 			return err
 		}
 		v.Clear()
 		v.Title = "Put your name and press enter"
 		v.Editable = true
-		if err := g.SetKeybinding(DialogViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+		if err := g.SetKeybinding(viewmanagers.DialogViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
 
 			// Get line
 			line, err := v.Line(0)
@@ -207,7 +194,7 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 			// Reset dialog
 			v.Clear()
 			v.Editable = false
-			g.DeleteKeybindings(DialogViewID)
+			g.DeleteKeybindings(viewmanagers.DialogViewID)
 
 			mainView, err := c.setDefaultView(g)
 			if err != nil {
@@ -236,19 +223,9 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 func (c *Client) updateState(g *gocui.Gui, client pb.WWClient) {
 	g.Update(func(g *gocui.Gui) error {
 
-		// Update left view
-		v, err := g.View(LeftViewID)
-		if err != nil {
+		// Update info
+		if err := c.personer.UpdateInfo(g, c.players); err != nil {
 			return err
-		}
-		v.Clear()
-		for _, player := range c.players {
-			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-			if player.GetIsDead() {
-				fmt.Fprintf(v, "Dead")
-			} else {
-				fmt.Fprintf(v, "Alive")
-			}
 		}
 
 		// Do specific action

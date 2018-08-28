@@ -21,7 +21,7 @@ func prepareServer() {
 func TestConnection(t *testing.T) {
 	prepareServer()
 	wg := new(sync.WaitGroup)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < NumPlayers; i++ {
 		wg.Add(1)
 		go func(idx int, t *testing.T) {
 			conn, err := grpc.Dial("localhost:9999", grpc.WithInsecure())
@@ -41,7 +41,9 @@ func TestConnection(t *testing.T) {
 				t.Errorf("Name is invalid %s:%s", res.GetName(), req.GetName())
 			}
 
-			stream, err := client.State(xcontext.Background(), new(pb.StateRequest))
+			stream, err := client.State(xcontext.Background(), &pb.StateRequest{
+				Uuid: res.Uuid,
+			})
 			if err != nil {
 				t.Error(err)
 			}
@@ -50,19 +52,27 @@ func TestConnection(t *testing.T) {
 			if err != nil && err != io.EOF {
 				t.Error(err)
 			}
-			if len(stateRes.GetPlayers()) != 10 {
-				t.Errorf("The number of players should be 10: %d", len(stateRes.GetPlayers()))
+			if len(stateRes.GetPlayers()) != NumPlayers {
+				t.Errorf("The number of players should be %d: %d", NumPlayers, len(stateRes.GetPlayers()))
 			}
 			if stateRes.GetState() != pb.State_NIGHT {
 				t.Errorf("State should be night: %v", stateRes.GetState())
+			}
+
+			if res.GetKind() == pb.Kind_WAREWOLF {
+				var wwCount int
+				for _, v := range stateRes.GetPlayers() {
+					if v.GetKind() == pb.Kind_WAREWOLF {
+						wwCount++
+					}
+				}
+				if wwCount != 2 {
+					t.Error("should be send warewolf kind to warewolf")
+				}
 			}
 
 			wg.Done()
 		}(i, t)
 	}
 	wg.Wait()
-}
-
-func TestBiteOne(t *testing.T) {
-	prepareServer()
 }

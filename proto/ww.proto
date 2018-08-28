@@ -45,7 +45,7 @@ message HelloResponse{
 }
 
 message StateRequest{
-
+  string uuid = 1;
 }
 
 message StateResponse{
@@ -96,7 +96,7 @@ message SleepResponse{
 
 message Player{
   int32 id = 1;
-  string uuid = 2;
+  Kind kind = 2;
   bool is_dead = 3;
   string name = 4;
 }

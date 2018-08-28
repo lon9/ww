@@ -17,7 +17,7 @@ import (
 )
 
 // NumPlayers is the number of players
-const NumPlayers = 10
+const NumPlayers = 5
 
 // NumWarewolf is the number of warewolfs
 const NumWarewolf = 2
@@ -199,10 +199,14 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 	ch := make(chan bool)
 	defer close(ch)
 	s.stateQueue <- ch
+	personer, err := s.personers.FindPersonerByUUID(req.GetUuid())
+	if err != nil {
+		return err
+	}
 	for range ch {
 		res := &pb.StateResponse{
 			State:   s.state,
-			Players: s.personers.ConvertPersoners(),
+			Players: personer.ConvertPersoners(s.personers),
 		}
 		if err := stream.Send(res); err != nil {
 			return err

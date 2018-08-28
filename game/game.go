@@ -1,10 +1,12 @@
 package game
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/jroimartin/gocui"
 	pb "github.com/lon9/ww/proto"
+	"github.com/lon9/ww/viewmanagers"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -30,7 +32,9 @@ type Personer interface {
 	SetDeadWill(int)
 	IncDeadWill()
 	Init()
+	ConvertPersoners(Personers) []*pb.Player
 
+	UpdateInfo(*gocui.Gui, []*pb.Player) error
 	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
 	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
 }
@@ -150,6 +154,41 @@ func (p *Person) Init() {
 	p.aliveWill = 0
 }
 
+// ConvertPersoners converts Personers to []*pb.Player
+func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
+	players := make([]*pb.Player, len(personers))
+
+	for i, v := range personers {
+		player := &pb.Player{
+			Id:     int32(v.GetID()),
+			Name:   v.GetName(),
+			IsDead: v.GetIsDead(),
+		}
+		players[i] = player
+	}
+	return players
+}
+
+// UpdateInfo updates info view
+func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) error {
+	// Update left view
+	v, err := g.View(viewmanagers.LeftViewID)
+	if err != nil {
+		return err
+	}
+	v.Clear()
+	for _, player := range players {
+		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+		if player.GetIsDead() {
+			fmt.Fprint(v, "Dead")
+		} else {
+			fmt.Fprint(v, "Alive")
+		}
+		fmt.Fprintln(v)
+	}
+	return nil
+}
+
 // NightAction defines action at night
 func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
 	return nil
@@ -225,8 +264,44 @@ type Warewolf struct {
 	Person
 }
 
-// NightAction defines warewolf's action at night
-func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
+// ConvertPersoners converts Personers to []*pb.Player (Override)
+func (w *Warewolf) ConvertPersoners(personers Personers) []*pb.Player {
+	players := make([]*pb.Player, len(personers))
+
+	for i, v := range personers {
+		player := &pb.Player{
+			Id:     int32(v.GetID()),
+			Name:   v.GetName(),
+			IsDead: v.GetIsDead(),
+		}
+		if v.GetKind() == pb.Kind_WAREWOLF {
+			player.Kind = v.GetKind()
+		}
+		players[i] = player
+	}
+	return players
+}
+
+// UpdateInfo updates information of left view (Override)
+func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) error {
+	// Update left view
+	v, err := g.View(viewmanagers.LeftViewID)
+	if err != nil {
+		return err
+	}
+	v.Clear()
+	for _, player := range players {
+		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+		if player.GetIsDead() {
+			fmt.Fprint(v, "Dead")
+		} else {
+			fmt.Fprint(v, "Alive")
+		}
+		if player.GetKind() == pb.Kind_WAREWOLF {
+			fmt.Fprint(v, " W")
+		}
+		fmt.Fprintln(v)
+	}
 	return nil
 }
 
@@ -289,21 +364,6 @@ func (ps Personers) IsFinish() bool {
 	return false
 }
 
-// ConvertPersoners converts Personers to []*pb.Player
-func (ps Personers) ConvertPersoners() []*pb.Player {
-	var players []*pb.Player
-
-	for _, v := range ps {
-		player := &pb.Player{
-			Id:     int32(v.GetID()),
-			Name:   v.GetName(),
-			IsDead: v.GetIsDead(),
-		}
-		players = append(players, player)
-	}
-	return players
-}
-
 // Init initializes wills of members
 func (ps Personers) Init() {
 	for k := range ps {
@@ -348,4 +408,14 @@ func (ps Personers) ValidKind(uid string, kind pb.Kind) bool {
 		}
 	}
 	return false
+}
+
+// FindPersonerByUUID finds Personer by UUID
+func (ps Personers) FindPersonerByUUID(uid string) (Personer, error) {
+	for _, v := range ps {
+		if v.GetUUID().String() == uid {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("Not found personer of the uuid: %s", uid)
 }
