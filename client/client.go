@@ -149,7 +149,7 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
 		c.mu.Unlock()
-		c.updateState(g, client)
+		c.doAction(g, client)
 	}
 }
 
@@ -220,26 +220,13 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 	})
 }
 
-func (c *Client) updateState(g *gocui.Gui, client pb.WWClient) {
-	g.Update(func(g *gocui.Gui) error {
-
-		// Update info
-		if err := c.personer.UpdateInfo(g, c.players); err != nil {
-			return err
-		}
-
-		// Do specific action
-		switch c.state {
-		case pb.State_MORNING:
-			if err := c.personer.MorningAction(g, client, c.players); err != nil {
-				return err
-			}
-		case pb.State_NIGHT:
-			if err := c.personer.NightAction(g, client, c.players); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
+func (c *Client) doAction(g *gocui.Gui, client pb.WWClient) {
+	c.personer.UpdateInfo(g, c.players)
+	// Do specific action
+	switch c.state {
+	case pb.State_MORNING:
+		c.personer.MorningAction(g, client, c.players)
+	case pb.State_NIGHT:
+		c.personer.NightAction(g, client, c.players)
+	}
 }

@@ -226,6 +226,7 @@ func (s *Server) Bite(ctx xcontext.Context, req *pb.BiteRequest) (*pb.BiteRespon
 	id := int(req.GetDstId())
 	s.personers[id].IncDeadWill()
 	s.actionMutex.Unlock()
+	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.BiteResponse), nil
 }
 
@@ -235,6 +236,7 @@ func (s *Server) Vote(ctx xcontext.Context, req *pb.VoteRequest) (*pb.VoteRespon
 	id := int(req.GetDstId())
 	s.personers[id].IncVotes()
 	s.actionMutex.Unlock()
+	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.VoteResponse), nil
 }
 
@@ -248,6 +250,7 @@ func (s *Server) Protect(ctx xcontext.Context, req *pb.ProtectRequest) (*pb.Prot
 	id := int(req.GetDstId())
 	s.personers[id].IncAliveWill()
 	s.actionMutex.Unlock()
+	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.ProtectResponse), nil
 }
 
@@ -260,6 +263,7 @@ func (s *Server) Tell(ctx xcontext.Context, req *pb.TellRequest) (*pb.TellRespon
 	}
 	id := int(req.GetDstId())
 	s.actionMutex.Unlock()
+	s.finishActionCh <- req.GetSrcUuid()
 	return &pb.TellResponse{
 		Camp: s.personers[id].GetCamp(),
 	}, nil
@@ -267,6 +271,7 @@ func (s *Server) Tell(ctx xcontext.Context, req *pb.TellRequest) (*pb.TellRespon
 
 // Sleep handles Sleep request
 func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepResponse, error) {
+	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.SleepResponse), nil
 }
 

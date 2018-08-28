@@ -87,7 +87,7 @@ message TellResponse{
 }
 
 message SleepRequest{
-
+  string src_uuid = 1;
 }
 
 message SleepResponse{

@@ -1,13 +1,22 @@
 package game
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"math/rand"
+	"time"
 
 	"github.com/jroimartin/gocui"
 	pb "github.com/lon9/ww/proto"
 	"github.com/lon9/ww/viewmanagers"
 	uuid "github.com/satori/go.uuid"
+	xcontext "golang.org/x/net/context"
+)
+
+const (
+	// DiscussionTime is duration of discussion
+	DiscussionTime int = 60
 )
 
 // Personer is interface for person
@@ -34,9 +43,9 @@ type Personer interface {
 	Init()
 	ConvertPersoners(Personers) []*pb.Player
 
-	UpdateInfo(*gocui.Gui, []*pb.Player) error
-	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
-	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
+	UpdateInfo(*gocui.Gui, []*pb.Player)
+	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player)
+	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 }
 
 // Person is struct for person
@@ -170,33 +179,133 @@ func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 }
 
 // UpdateInfo updates info view
-func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) error {
-	// Update left view
-	v, err := g.View(viewmanagers.LeftViewID)
-	if err != nil {
-		return err
-	}
-	v.Clear()
-	for _, player := range players {
-		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-		if player.GetIsDead() {
-			fmt.Fprint(v, "Dead")
-		} else {
-			fmt.Fprint(v, "Alive")
+func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
+	g.Update(func(g *gocui.Gui) error {
+		// Update left view
+		v, err := g.View(viewmanagers.LeftViewID)
+		if err != nil {
+			return err
 		}
-		fmt.Fprintln(v)
-	}
-	return nil
+		v.Clear()
+		for _, player := range players {
+			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+			if player.GetIsDead() {
+				fmt.Fprint(v, "Dead")
+			} else {
+				fmt.Fprint(v, "Alive")
+			}
+			fmt.Fprintln(v)
+		}
+		return nil
+	})
 }
 
 // NightAction defines action at night
-func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
-	return nil
+func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	// Common night action
+
+	// If already dead
+	if p.GetIsDead() {
+		viewmanagers.DrawDeadView(g)
+		return
+	}
+
+	// Send sleep request
+	ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+	defer cancel()
+	_, err := c.Sleep(ctx, new(pb.SleepRequest))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	g.Update(func(g *gocui.Gui) error {
+		mainView, err := g.View(viewmanagers.MainViewID)
+		if err != nil {
+			return err
+		}
+		mainView.Clear()
+		fmt.Fprintln(mainView, "Waiting for morning")
+		return nil
+	})
 }
 
 // MorningAction votes some player
-func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
-	return nil
+func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	// Common morning action
+
+	// If already dead
+	if p.GetIsDead() {
+		viewmanagers.DrawDeadView(g)
+		return
+	}
+
+	for i := DiscussionTime; i > 0; i-- {
+
+		// Discussion time 60 seconds
+		g.Update(func(g *gocui.Gui) error {
+			mainView, err := g.View(viewmanagers.MainViewID)
+			if err != nil {
+				return err
+			}
+			mainView.Clear()
+			fmt.Fprintf(mainView, "Vote in %d seconds, discuss with other players", i)
+			return nil
+		})
+		time.Sleep(1 * time.Second)
+	}
+
+	// Vote a player
+	g.Update(func(g *gocui.Gui) error {
+		mainView, err := g.View(viewmanagers.MainViewID)
+		if err != nil {
+			return err
+		}
+		mainView.Clear()
+		fmt.Fprintln(mainView, "Vote a player")
+		for _, player := range players {
+			if !player.GetIsDead() && int(player.GetId()) != p.GetID() {
+				fmt.Fprintf(mainView, "%d: %s\n", player.GetId(), player.GetName())
+			}
+		}
+		mainView.Highlight = true
+		mainView.BgColor = gocui.ColorWhite
+		if err := mainView.SetCursor(0, 1); err != nil {
+			return err
+		}
+		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowDown, gocui.ModNone, viewmanagers.CursorDown)
+		if err != nil {
+			return err
+		}
+		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowRight, gocui.ModNone, viewmanagers.CursorUp)
+		if err != nil {
+			return err
+		}
+		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+			index := viewmanagers.GetLineIndex(v)
+			if index < 0 || index > len(players) {
+				return errors.New("Index out of range")
+			}
+
+			// Sending vote request
+			req := &pb.VoteRequest{
+				SrcUuid: p.GetUUID().String(),
+				DstId:   players[index].GetId(),
+			}
+			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+			defer cancel()
+			_, err := c.Vote(ctx, req)
+			if err != nil {
+				return err
+			}
+			g.DeleteKeybindings(viewmanagers.MainViewID)
+			v.Highlight = false
+			v.Clear()
+			fmt.Fprintln(v, "Waiting for other players")
+			return nil
+		})
+		return nil
+	})
 }
 
 // NewPersoner is constructor for Person
@@ -283,26 +392,29 @@ func (w *Warewolf) ConvertPersoners(personers Personers) []*pb.Player {
 }
 
 // UpdateInfo updates information of left view (Override)
-func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) error {
-	// Update left view
-	v, err := g.View(viewmanagers.LeftViewID)
-	if err != nil {
-		return err
-	}
-	v.Clear()
-	for _, player := range players {
-		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-		if player.GetIsDead() {
-			fmt.Fprint(v, "Dead")
-		} else {
-			fmt.Fprint(v, "Alive")
+func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
+	g.Update(func(g *gocui.Gui) error {
+		// Update left view
+		v, err := g.View(viewmanagers.LeftViewID)
+		if err != nil {
+			return err
 		}
-		if player.GetKind() == pb.Kind_WAREWOLF {
-			fmt.Fprint(v, " W")
+		v.Clear()
+		for _, player := range players {
+			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+			if player.GetIsDead() {
+				fmt.Fprint(v, "Dead")
+			} else {
+				fmt.Fprint(v, "Alive")
+			}
+			if player.GetKind() == pb.Kind_WAREWOLF {
+				fmt.Fprint(v, " W")
+			}
+			fmt.Fprintln(v)
 		}
-		fmt.Fprintln(v)
-	}
-	return nil
+		return nil
+	})
+
 }
 
 // Teller is struct for Teller
