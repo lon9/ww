@@ -60,10 +60,13 @@ func (c *Client) Run(addr, port string) {
 	}
 	defer g.Close()
 
+	// Initialize views
 	mainView := viewmanagers.NewMainView(MainViewID, false)
 	leftView := viewmanagers.NewLeftView(LeftViewID, false)
 	rightView := viewmanagers.NewRightView(RightViewID, true)
 	dialogView := viewmanagers.NewDialogView(DialogViewID, true)
+
+	// Add view managers
 	c.managers = append(c.managers, leftView)
 	c.managers = append(c.managers, mainView)
 	c.managers = append(c.managers, rightView)
@@ -72,21 +75,28 @@ func (c *Client) Run(addr, port string) {
 	g.SelFgColor = gocui.ColorGreen
 	g.SetManager(mainView, leftView, rightView, dialogView)
 
+	// Quit
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, c.quit); err != nil {
 		log.Panicln(err)
 	}
+
+	// Change focus
 	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, c.nextView); err != nil {
 		log.Panicln(err)
 	}
 
+	// Connect to server
 	conn, err := grpc.Dial(addr+":"+port, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 	defer conn.Close()
 	client := pb.NewWWClient(conn)
-	go c.gameLoop(g, client)
 
+	// Initialize
+	go c.initialize(g, client)
+
+	// Start UI loop
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(err)
 	}
@@ -152,13 +162,11 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
 		c.mu.Unlock()
-		g.Update(func(g *gocui.Gui) error {
-			return c.updateState(g)
-		})
+		c.updateState(g, client)
 	}
 }
 
-func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
+func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 
 	// Connect to server, sending hello request
 	g.Update(func(g *gocui.Gui) error {
@@ -214,6 +222,8 @@ func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
 				return err
 			}
 			fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
+
+			// Start state loop
 			go c.stateLoop(g, client)
 			return nil
 		}); err != nil {
@@ -223,20 +233,36 @@ func (c *Client) gameLoop(g *gocui.Gui, client pb.WWClient) {
 	})
 }
 
-func (c *Client) updateState(g *gocui.Gui) error {
+func (c *Client) updateState(g *gocui.Gui, client pb.WWClient) {
+	g.Update(func(g *gocui.Gui) error {
 
-	v, err := g.View(LeftViewID)
-	if err != nil {
-		return err
-	}
-	v.Clear()
-	for _, player := range c.players {
-		fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-		if player.GetIsDead() {
-			fmt.Fprintf(v, "Dead")
-		} else {
-			fmt.Fprintf(v, "Alive")
+		// Update left view
+		v, err := g.View(LeftViewID)
+		if err != nil {
+			return err
 		}
-	}
-	return nil
+		v.Clear()
+		for _, player := range c.players {
+			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
+			if player.GetIsDead() {
+				fmt.Fprintf(v, "Dead")
+			} else {
+				fmt.Fprintf(v, "Alive")
+			}
+		}
+
+		// Do specific action
+		switch c.state {
+		case pb.State_MORNING:
+			if err := c.personer.MorningAction(g, client, c.players); err != nil {
+				return err
+			}
+		case pb.State_NIGHT:
+			if err := c.personer.NightAction(g, client, c.players); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

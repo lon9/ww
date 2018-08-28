@@ -1,9 +1,9 @@
 package game
 
 import (
-	"fmt"
 	"math/rand"
 
+	"github.com/jroimartin/gocui"
 	pb "github.com/lon9/ww/proto"
 	uuid "github.com/satori/go.uuid"
 )
@@ -31,8 +31,8 @@ type Personer interface {
 	IncDeadWill()
 	Init()
 
-	Vote(people []Personer) int
-	NightAction()
+	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
+	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player) error
 }
 
 // Person is struct for person
@@ -151,14 +151,13 @@ func (p *Person) Init() {
 }
 
 // NightAction defines action at night
-func (p *Person) NightAction() {}
+func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
+	return nil
+}
 
-// Vote votes some player
-func (p *Person) Vote(people []Personer) int {
-	for _, v := range people {
-		fmt.Printf("%d: %s\n", v.GetID(), v.GetName())
-	}
-	return 1
+// MorningAction votes some player
+func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
+	return nil
 }
 
 // NewPersoner is constructor for Person
@@ -227,8 +226,8 @@ type Warewolf struct {
 }
 
 // NightAction defines warewolf's action at night
-func (w *Warewolf) NightAction() {
-
+func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) error {
+	return nil
 }
 
 // Teller is struct for Teller
