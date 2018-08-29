@@ -226,5 +226,7 @@ func (c *Client) doAction(g *gocui.Gui, client pb.WWClient) {
 		c.personer.MorningAction(g, client, c.players)
 	case pb.State_NIGHT:
 		c.personer.NightAction(g, client, c.players)
+	case pb.State_AFTER:
+		c.personer.AfterAction(g, client, c.players)
 	}
 }

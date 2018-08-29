@@ -197,8 +197,12 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 	}
 	for range ch {
 		res := &pb.StateResponse{
-			State:   s.state,
-			Players: personer.ConvertPersoners(s.personers),
+			State: s.state,
+		}
+		if s.state == pb.State_AFTER {
+			res.Players = personer.ConvertAfter(s.personers)
+		} else {
+			res.Players = personer.ConvertPersoners(s.personers)
 		}
 		if err := stream.Send(res); err != nil {
 			return err

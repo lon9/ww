@@ -44,10 +44,12 @@ type Personer interface {
 	IncDeadWill()
 	Init()
 	ConvertPersoners(Personers) []*pb.Player
+	ConvertAfter(Personers) []*pb.Player
 
 	UpdateInfo(*gocui.Gui, []*pb.Player)
 	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
+	AfterAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 }
 
 // Person is struct for person
@@ -180,6 +182,23 @@ func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 	return players
 }
 
+// ConvertAfter convert Personers to player with all info
+func (p *Person) ConvertAfter(personers Personers) []*pb.Player {
+	players := make([]*pb.Player, len(personers))
+
+	for i, v := range personers {
+		player := &pb.Player{
+			Id:     int32(v.GetID()),
+			Name:   v.GetName(),
+			IsDead: v.GetIsDead(),
+			Camp:   v.GetCamp(),
+			Kind:   v.GetKind(),
+		}
+		players[i] = player
+	}
+	return players
+}
+
 // UpdateInfo updates info view
 func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 	g.Update(func(g *gocui.Gui) error {
@@ -294,6 +313,22 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 		})
 }
 
+// AfterAction is action did when game is finished
+func (p *Person) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	personers := make(Personers)
+	personers.FromPlayers(players)
+	wonCamp, err := personers.WhichWon()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if wonCamp == pb.Camp_GOOD {
+		p.drawAfterView(g, viewmanagers.MainViewID, "You won", players)
+	} else if wonCamp == pb.Camp_EVIL {
+		p.drawAfterView(g, viewmanagers.MainViewID, "You lose", players)
+	}
+}
+
 func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 	viewID,
 	msg string,
@@ -342,6 +377,29 @@ func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 			return onSelected(g, v, players[index-1])
 		})
 		return err
+	})
+}
+
+func (p *Person) drawAfterView(g *gocui.Gui, viewID, msg string, players []*pb.Player) {
+	g.Update(func(g *gocui.Gui) error {
+		v, err := g.View(viewID)
+		if err != nil {
+			return err
+		}
+		v.Clear()
+		fmt.Fprintln(v, msg)
+		for _, player := range players {
+			kind, err := consts.GetKind(player.GetKind())
+			if err != nil {
+				return err
+			}
+			if player.GetIsDead() {
+				fmt.Fprintf(v, "%d: %s %s %s\n", player.GetId(), player.GetName(), kind, "Dead")
+			} else {
+				fmt.Fprintf(v, "%d: %s %s %s\n", player.GetId(), player.GetName(), kind, "Alive")
+			}
+		}
+		return nil
 	})
 }
 
@@ -496,6 +554,22 @@ func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 		})
 }
 
+// AfterAction is action when the game is finished (Override)
+func (w *Warewolf) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+	personers := make(Personers)
+	personers.FromPlayers(players)
+	wonCamp, err := personers.WhichWon()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if wonCamp == pb.Camp_GOOD {
+		w.drawAfterView(g, viewmanagers.MainViewID, "You lose", players)
+	} else if wonCamp == pb.Camp_EVIL {
+		w.drawAfterView(g, viewmanagers.MainViewID, "You won", players)
+	}
+}
+
 // Teller is struct for Teller
 type Teller struct {
 	Person
@@ -599,6 +673,14 @@ func (k *Knight) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 // Personers is slice of Personer
 type Personers map[int]Personer
 
+// FromPlayers initialize Personers from []*pb.FromPlayers
+func (ps Personers) FromPlayers(players []*pb.Player) {
+	for _, v := range players {
+		ps[int(v.GetId())] = NewPersoner(int(v.GetId()), v.GetName(), v.GetKind())
+		ps[int(v.GetId())].SetIsDead(v.GetIsDead())
+	}
+}
+
 // NumAlive returns the number of alive persons
 func (ps Personers) NumAlive() int {
 	var n int
@@ -643,6 +725,19 @@ func (ps Personers) IsFinish() bool {
 		return true
 	}
 	return false
+}
+
+// WhichWon returns which camp won
+func (ps Personers) WhichWon() (pb.Camp, error) {
+	nAliveGood := ps.NumAliveGood()
+	nAliveEvil := ps.NumAliveEvil()
+	if nAliveEvil == 0 {
+		return pb.Camp_GOOD, nil
+	}
+	if nAliveGood <= nAliveEvil {
+		return pb.Camp_EVIL, nil
+	}
+	return -1, errors.New("Is not finish the game")
 }
 
 // Init initializes wills of members
