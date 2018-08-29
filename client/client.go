@@ -163,56 +163,61 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 		v.Clear()
 		v.Title = "Put your name and press enter"
 		v.Editable = true
-		if err := g.SetKeybinding(viewmanagers.DialogViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+		err = g.SetKeybinding(
+			viewmanagers.DialogViewID,
+			gocui.KeyEnter,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
 
-			// Get line
-			line, err := v.Line(0)
-			if err != nil {
-				return err
-			}
+				// Get line
+				line, err := v.Line(0)
+				if err != nil {
+					return err
+				}
 
-			// Hello request
-			req := &pb.HelloRequest{
-				Name: line,
-			}
-			ctx, cancel := xcontext.WithTimeout(xcontext.Background(), time.Second*30)
-			defer cancel()
-			res, err := client.Hello(ctx, req)
-			if err != nil {
-				return err
-			}
+				// Hello request
+				req := &pb.HelloRequest{
+					Name: line,
+				}
+				ctx, cancel := xcontext.WithTimeout(xcontext.Background(), time.Second*30)
+				defer cancel()
+				res, err := client.Hello(ctx, req)
+				if err != nil {
+					return err
+				}
 
-			// Initialize personer
-			c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
-			id, err := uuid.FromString(res.GetUuid())
-			if err != nil {
-				return err
-			}
-			c.personer.SetUUID(id)
+				// Initialize personer
+				c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
+				id, err := uuid.FromString(res.GetUuid())
+				if err != nil {
+					return err
+				}
+				c.personer.SetUUID(id)
 
-			// Reset dialog
-			v.Clear()
-			v.Editable = false
-			g.DeleteKeybindings(viewmanagers.DialogViewID)
+				// Reset dialog
+				v.Clear()
+				v.Editable = false
+				g.DeleteKeybindings(viewmanagers.DialogViewID)
 
-			mainView, err := c.setDefaultView(g)
-			if err != nil {
-				return err
-			}
-			kind, err := consts.GetKind(c.personer.GetKind())
-			if err != nil {
-				return err
-			}
-			camp, err := consts.GetCamp(c.personer.GetCamp())
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
+				mainView, err := c.setDefaultView(g)
+				if err != nil {
+					return err
+				}
+				kind, err := consts.GetKind(c.personer.GetKind())
+				if err != nil {
+					return err
+				}
+				camp, err := consts.GetCamp(c.personer.GetCamp())
+				if err != nil {
+					return err
+				}
+				fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
 
-			// Start state loop
-			go c.stateLoop(g, client)
-			return nil
-		}); err != nil {
+				// Start state loop
+				go c.stateLoop(g, client)
+				return nil
+			})
+		if err != nil {
 			return err
 		}
 		return nil

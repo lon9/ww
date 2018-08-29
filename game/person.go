@@ -330,23 +330,37 @@ func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 		}
 
 		// Setting key bindings
-		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowDown, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-			return viewmanagers.CursorDownWithRange(v, len(players))
-		}); err != nil {
+		err = g.SetKeybinding(
+			viewmanagers.MainViewID,
+			gocui.KeyArrowDown,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				return viewmanagers.CursorDownWithRange(v, len(players))
+			})
+		if err != nil {
 			return err
 		}
-		if err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyArrowUp, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-			return viewmanagers.CursorUpWithRange(v, 1)
-		}); err != nil {
+		err = g.SetKeybinding(
+			viewmanagers.MainViewID,
+			gocui.KeyArrowUp,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				return viewmanagers.CursorUpWithRange(v, 1)
+			})
+		if err != nil {
 			return err
 		}
-		err = g.SetKeybinding(viewmanagers.MainViewID, gocui.KeyEnter, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-			index := viewmanagers.GetLineIndex(v)
-			if index < 1 || index > len(players) {
-				return errors.New("Index out of range")
-			}
-			return onSelected(g, v, players[index-1])
-		})
+		err = g.SetKeybinding(
+			viewmanagers.MainViewID,
+			gocui.KeyEnter,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				index := viewmanagers.GetLineIndex(v)
+				if index < 1 || index > len(players) {
+					return errors.New("Index out of range")
+				}
+				return onSelected(g, v, players[index-1])
+			})
 		return err
 	})
 }
