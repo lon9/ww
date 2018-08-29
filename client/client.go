@@ -146,6 +146,7 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 		c.mu.Lock()
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
+		c.personer.Update(c.players)
 		c.mu.Unlock()
 		c.doAction(g, client)
 	}

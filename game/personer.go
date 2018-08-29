@@ -28,6 +28,7 @@ type Personer interface {
 	SetDeadWill(int)
 	IncDeadWill()
 	Init()
+	Update([]*pb.Player)
 	ConvertPersoners(Personers) []*pb.Player
 	ConvertAfter(Personers) []*pb.Player
 

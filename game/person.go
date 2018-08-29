@@ -129,6 +129,15 @@ func (p *Person) Init() {
 	p.aliveWill = 0
 }
 
+// Update updates status
+func (p *Person) Update(players []*pb.Player) {
+	for _, player := range players {
+		if p.GetID() == int(player.GetId()) {
+			p.SetIsDead(player.GetIsDead())
+		}
+	}
+}
+
 // ConvertPersoners converts Personers to []*pb.Player
 func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 	players := make([]*pb.Player, len(personers))
