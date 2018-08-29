@@ -36,6 +36,7 @@ type Personer interface {
 	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	AfterAction(*gocui.Gui, pb.WWClient, []*pb.Player)
+	RestartAction(*gocui.Gui, pb.WWClient)
 }
 
 // NewPersoner is constructor for Person

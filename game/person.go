@@ -300,6 +300,44 @@ func (p *Person) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 	}
 }
 
+// RestartAction is action to restart vote
+func (p *Person) RestartAction(g *gocui.Gui, c pb.WWClient) {
+	g.Update(func(g *gocui.Gui) error {
+		v, err := viewmanagers.SetCurrentViewOnTop(g, viewmanagers.DialogViewID)
+		if err != nil {
+			return err
+		}
+		v.Clear()
+		v.Title = "Do you want to restatr?"
+		v.Editable = false
+		fmt.Fprintln(v, "Yes")
+		fmt.Fprintln(v, "No")
+		v.Highlight = true
+		v.SelBgColor = gocui.ColorGreen
+		v.SelFgColor = gocui.ColorBlack
+
+		if err := v.SetCursor(0, 0); err != nil {
+			return err
+		}
+
+		err = g.SetKeybinding(
+			viewmanagers.DialogViewID,
+			gocui.KeyArrowDown,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				return viewmanagers.CursorDownWithRange(v, 3)
+			},
+		)
+		if err != nil {
+			return err
+		}
+
+		// TODO: WIP
+
+		return nil
+	})
+}
+
 func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 	viewID,
 	msg string,

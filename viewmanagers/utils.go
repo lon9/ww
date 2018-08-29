@@ -87,3 +87,11 @@ func DrawDeadView(g *gocui.Gui, viewID string) {
 		return nil
 	})
 }
+
+// SetCurrentViewOnTop set the view on top
+func SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
+	if _, err := g.SetCurrentView(name); err != nil {
+		return nil, err
+	}
+	return g.SetViewOnTop(name)
+}

@@ -90,15 +90,8 @@ func (c *Client) quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func (c *Client) setCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
-	if _, err := g.SetCurrentView(name); err != nil {
-		return nil, err
-	}
-	return g.SetViewOnTop(name)
-}
-
 func (c *Client) setDefaultView(g *gocui.Gui) (*gocui.View, error) {
-	v, err := c.setCurrentViewOnTop(g, viewmanagers.DefaultViewID)
+	v, err := viewmanagers.SetCurrentViewOnTop(g, viewmanagers.DefaultViewID)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +103,7 @@ func (c *Client) nextView(g *gocui.Gui, v *gocui.View) error {
 	nextIndex := (c.activeView + 1) % len(c.managers)
 	manager := c.managers[nextIndex]
 
-	if _, err := c.setCurrentViewOnTop(g, manager.GetName()); err != nil {
+	if _, err := viewmanagers.SetCurrentViewOnTop(g, manager.GetName()); err != nil {
 		return err
 	}
 
@@ -155,7 +148,7 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 
 	// Connect to server, sending hello request
 	g.Update(func(g *gocui.Gui) error {
-		v, err := c.setCurrentViewOnTop(g, viewmanagers.DialogViewID)
+		v, err := viewmanagers.SetCurrentViewOnTop(g, viewmanagers.DialogViewID)
 		if err != nil {
 			return err
 		}
