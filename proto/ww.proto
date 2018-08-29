@@ -12,6 +12,7 @@ service WW{
   rpc Protect(ProtectRequest)returns (ProtectResponse);
   rpc Tell(TellRequest)returns (TellResponse);
   rpc Sleep(SleepRequest)returns (SleepResponse);
+  rpc Restart(RestartRequest)returns (RestartResponse);
 }
 
 enum Camp{
@@ -93,6 +94,13 @@ message SleepRequest{
 message SleepResponse{
 }
 
+message RestartRequest{
+  string src_uuid = 1;
+  bool is_restart = 2;
+}
+
+message RestartResponse{
+}
 
 message Player{
   int32 id = 1;

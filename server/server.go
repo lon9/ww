@@ -14,7 +14,6 @@ import (
 	pb "github.com/lon9/ww/proto"
 	xcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 type connectionEntry struct {
@@ -31,46 +30,14 @@ type Server struct {
 	stateBroadcastChans []chan bool
 	finishActionCh      chan string
 	actionMutex         *sync.Mutex
+	restartVote         int
+	grpcServer          *grpc.Server
 }
 
 // NewTestServer constructor for test server
 func NewTestServer() *Server {
-
-	s := make([]int, consts.NumPlayers)
-	for i := 0; i < consts.NumPlayers; i++ {
-		s[i] = i
-	}
-	n := len(s)
-	for i := n - 1; i >= 0; i-- {
-		j := rand.Intn(i + 1)
-		s[i], s[j] = s[j], s[i]
-	}
-
-	personers := make(game.Personers)
-	var idx int
-	for i := 0; i < consts.NumWarewolf; i++ {
-		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_WAREWOLF)
-		idx++
-	}
-	for i := 0; i < consts.NumTeller; i++ {
-		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_TELLER)
-		idx++
-	}
-	for i := 0; i < consts.NumKnight; i++ {
-		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_KNIGHT)
-		idx++
-	}
-	for i := 0; i < consts.NumPlayers-consts.NumWarewolf-consts.NumKnight-consts.NumTeller; i++ {
-		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_CITIZEN)
-		idx++
-	}
-
 	return &Server{
-		personers:       personers,
-		state:           pb.State_BEFORE,
-		connectionQueue: make(chan *connectionEntry),
-		stateQueue:      make(chan chan bool),
-		actionMutex:     new(sync.Mutex),
+		actionMutex: new(sync.Mutex),
 	}
 }
 
@@ -80,10 +47,56 @@ func (s *Server) Run(port string) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	grpcServer := grpc.NewServer()
-	pb.RegisterWWServer(grpcServer, s)
+	s.grpcServer = grpc.NewServer()
+	pb.RegisterWWServer(s.grpcServer, s)
 	// Register reflection service on gRPC server.
-	reflection.Register(grpcServer)
+	// reflection.Register(grpcServer)
+
+	// Start
+	s.start()
+
+	if err := s.grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func (s *Server) start() {
+
+	// Initialize server
+	indice := make([]int, consts.NumPlayers)
+	for i := 0; i < consts.NumPlayers; i++ {
+		indice[i] = i
+	}
+	n := len(indice)
+	for i := n - 1; i >= 0; i-- {
+		j := rand.Intn(i + 1)
+		indice[i], indice[j] = indice[j], indice[i]
+	}
+
+	personers := make(game.Personers)
+	var idx int
+	for i := 0; i < consts.NumWarewolf; i++ {
+		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_WAREWOLF)
+		idx++
+	}
+	for i := 0; i < consts.NumTeller; i++ {
+		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_TELLER)
+		idx++
+	}
+	for i := 0; i < consts.NumKnight; i++ {
+		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_KNIGHT)
+		idx++
+	}
+	for i := 0; i < consts.NumPlayers-consts.NumWarewolf-consts.NumKnight-consts.NumTeller; i++ {
+		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_CITIZEN)
+		idx++
+	}
+
+	s.personers = personers
+	s.state = pb.State_BEFORE
+	s.connectionQueue = make(chan *connectionEntry)
+	s.stateQueue = make(chan chan bool)
+	s.restartVote = 0
 
 	// Waiting for hello request
 	go func() {
@@ -107,8 +120,12 @@ func (s *Server) Run(port string) {
 		s.changeState(pb.State_NIGHT)
 		go s.gameLoop()
 	}()
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+}
+
+func (s *Server) stop() {
+	// Closing stateBroadcastChans
+	for i := range s.stateBroadcastChans {
+		close(s.stateBroadcastChans[i])
 	}
 }
 
@@ -153,6 +170,15 @@ func (s *Server) gameLoop() {
 			s.changeState(pb.State_NIGHT)
 		case pb.State_NIGHT:
 			s.changeState(pb.State_MORNING)
+		case pb.State_AFTER:
+			s.stop()
+			if s.restartVote == consts.NumPlayers {
+				// If all player want to restart, restart server.
+				s.start()
+				return
+			}
+			s.grpcServer.GracefulStop()
+			return
 		}
 	}
 }
@@ -258,6 +284,17 @@ func (s *Server) Tell(ctx xcontext.Context, req *pb.TellRequest) (*pb.TellRespon
 func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepResponse, error) {
 	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.SleepResponse), nil
+}
+
+// Restart handles Restart request
+func (s *Server) Restart(ctx xcontext.Context, req *pb.RestartRequest) (*pb.RestartResponse, error) {
+	s.actionMutex.Lock()
+	if req.GetIsRestart() {
+		s.restartVote++
+	}
+	s.actionMutex.Unlock()
+	s.finishActionCh <- req.GetSrcUuid()
+	return new(pb.RestartResponse), nil
 }
 
 func (s *Server) changeState(state pb.State) {
