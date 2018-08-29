@@ -215,7 +215,9 @@ func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 	// Sending sleep request
 	ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
 	defer cancel()
-	_, err := c.Sleep(ctx, new(pb.SleepRequest))
+	_, err := c.Sleep(ctx, &pb.SleepRequest{
+		SrcUuid: p.GetUUID().String(),
+	})
 	if err != nil {
 		log.Println(err)
 		return
@@ -337,7 +339,7 @@ func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
 			if index < 1 || index > len(players) {
 				return errors.New("Index out of range")
 			}
-			return onSelected(g, v, players[index+1])
+			return onSelected(g, v, players[index-1])
 		})
 		return err
 	})
