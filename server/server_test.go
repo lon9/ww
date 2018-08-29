@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/lon9/ww/consts"
 	pb "github.com/lon9/ww/proto"
 	xcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -21,7 +22,7 @@ func prepareServer() {
 func TestConnection(t *testing.T) {
 	prepareServer()
 	wg := new(sync.WaitGroup)
-	for i := 0; i < NumPlayers; i++ {
+	for i := 0; i < consts.NumPlayers; i++ {
 		wg.Add(1)
 		go func(idx int, t *testing.T) {
 			conn, err := grpc.Dial("localhost:9999", grpc.WithInsecure())
@@ -52,8 +53,8 @@ func TestConnection(t *testing.T) {
 			if err != nil && err != io.EOF {
 				t.Error(err)
 			}
-			if len(stateRes.GetPlayers()) != NumPlayers {
-				t.Errorf("The number of players should be %d: %d", NumPlayers, len(stateRes.GetPlayers()))
+			if len(stateRes.GetPlayers()) != consts.NumPlayers {
+				t.Errorf("The number of players should be %d: %d", consts.NumPlayers, len(stateRes.GetPlayers()))
 			}
 			if stateRes.GetState() != pb.State_NIGHT {
 				t.Errorf("State should be night: %v", stateRes.GetState())

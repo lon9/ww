@@ -7,6 +7,19 @@ import (
 	pb "github.com/lon9/ww/proto"
 )
 
+const (
+	// DiscussionTime is duration of discussion
+	DiscussionTime int = 60
+	// NumPlayers is the number of players
+	NumPlayers int = 5
+	// NumWarewolf is the number of warewolfs
+	NumWarewolf int = 2
+	// NumTeller is the number of fortune tellers
+	NumTeller int = 1
+	// NumKnight is the number of knights
+	NumKnight int = 1
+)
+
 var kinds = map[pb.Kind]string{
 	pb.Kind_CITIZEN:  "Citizen",
 	pb.Kind_WAREWOLF: "Warewolf",
@@ -40,5 +53,5 @@ func GetCamp(c pb.Camp) (string, error) {
 	if v, ok := camps[c]; ok {
 		return v, nil
 	}
-	return "", errors.New("The camp is not defined.")
+	return "", errors.New("the camp is not defined")
 }

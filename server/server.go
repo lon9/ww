@@ -9,24 +9,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/lon9/ww/consts"
 	"github.com/lon9/ww/game"
 	pb "github.com/lon9/ww/proto"
 	xcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
-
-// NumPlayers is the number of players
-const NumPlayers = 5
-
-// NumWarewolf is the number of warewolfs
-const NumWarewolf = 2
-
-// NumTeller is the number of fortune tellers
-const NumTeller = 1
-
-// NumKnight is the number of knights
-const NumKnight = 1
 
 type connectionEntry struct {
 	Name    string
@@ -47,8 +36,8 @@ type Server struct {
 // NewTestServer constructor for test server
 func NewTestServer() *Server {
 
-	s := make([]int, NumPlayers)
-	for i := 0; i < NumPlayers; i++ {
+	s := make([]int, consts.NumPlayers)
+	for i := 0; i < consts.NumPlayers; i++ {
 		s[i] = i
 	}
 	n := len(s)
@@ -59,19 +48,19 @@ func NewTestServer() *Server {
 
 	personers := make(game.Personers)
 	var idx int
-	for i := 0; i < NumWarewolf; i++ {
+	for i := 0; i < consts.NumWarewolf; i++ {
 		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_WAREWOLF)
 		idx++
 	}
-	for i := 0; i < NumTeller; i++ {
+	for i := 0; i < consts.NumTeller; i++ {
 		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_TELLER)
 		idx++
 	}
-	for i := 0; i < NumKnight; i++ {
+	for i := 0; i < consts.NumKnight; i++ {
 		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_KNIGHT)
 		idx++
 	}
-	for i := 0; i < NumPlayers-NumWarewolf-NumKnight-NumTeller; i++ {
+	for i := 0; i < consts.NumPlayers-consts.NumWarewolf-consts.NumKnight-consts.NumTeller; i++ {
 		personers[s[idx]] = game.NewPersoner(s[idx], "", pb.Kind_CITIZEN)
 		idx++
 	}
@@ -99,7 +88,7 @@ func (s *Server) Run(port string) {
 	// Waiting for hello request
 	go func() {
 		defer close(s.connectionQueue)
-		for i := 0; i < NumPlayers; i++ {
+		for i := 0; i < consts.NumPlayers; i++ {
 			entry := <-s.connectionQueue
 			s.personers[i].SetName(entry.Name)
 			entry.ResChan <- s.personers[i]
@@ -110,7 +99,7 @@ func (s *Server) Run(port string) {
 	// Waiting for state request
 	go func() {
 		defer close(s.stateQueue)
-		for i := 0; i < NumPlayers; i++ {
+		for i := 0; i < consts.NumPlayers; i++ {
 			ch := <-s.stateQueue
 			s.stateBroadcastChans = append(s.stateBroadcastChans, ch)
 		}

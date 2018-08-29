@@ -4,53 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
 	"time"
 
-	"github.com/lon9/ww/consts"
-
 	"github.com/jroimartin/gocui"
+	"github.com/lon9/ww/consts"
 	pb "github.com/lon9/ww/proto"
 	"github.com/lon9/ww/viewmanagers"
 	uuid "github.com/satori/go.uuid"
 	xcontext "golang.org/x/net/context"
 )
-
-const (
-	// DiscussionTime is duration of discussion
-	DiscussionTime int = 60
-)
-
-// Personer is interface for person
-type Personer interface {
-	GetID() int
-	SetID(int)
-	GetUUID() uuid.UUID
-	SetUUID(uuid.UUID)
-	GetKind() pb.Kind
-	GetCamp() pb.Camp
-	GetName() string
-	SetName(string)
-	GetVotes() int
-	SetVotes(int)
-	IncVotes()
-	GetIsDead() bool
-	SetIsDead(bool)
-	GetAliveWill() int
-	SetAliveWill(int)
-	IncAliveWill()
-	GetDeadWill() int
-	SetDeadWill(int)
-	IncDeadWill()
-	Init()
-	ConvertPersoners(Personers) []*pb.Player
-	ConvertAfter(Personers) []*pb.Player
-
-	UpdateInfo(*gocui.Gui, []*pb.Player)
-	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player)
-	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
-	AfterAction(*gocui.Gui, pb.WWClient, []*pb.Player)
-}
 
 // Person is struct for person
 type Person struct {
@@ -263,7 +225,7 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 		return
 	}
 
-	for i := DiscussionTime; i > 0; i-- {
+	for i := consts.DiscussionTime; i > 0; i-- {
 
 		// Discussion time 60 seconds
 		g.Update(func(g *gocui.Gui) error {
@@ -668,130 +630,4 @@ func (k *Knight) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 			fmt.Fprintf(v, "You'll protect a player named %s (%d)", selected.GetName(), selected.GetId())
 			return nil
 		})
-}
-
-// Personers is slice of Personer
-type Personers map[int]Personer
-
-// FromPlayers initialize Personers from []*pb.FromPlayers
-func (ps Personers) FromPlayers(players []*pb.Player) {
-	for _, v := range players {
-		ps[int(v.GetId())] = NewPersoner(int(v.GetId()), v.GetName(), v.GetKind())
-		ps[int(v.GetId())].SetIsDead(v.GetIsDead())
-	}
-}
-
-// NumAlive returns the number of alive persons
-func (ps Personers) NumAlive() int {
-	var n int
-	for _, v := range ps {
-		if !v.GetIsDead() {
-			n++
-		}
-	}
-	return n
-}
-
-// NumAliveGood returns the number of alive good people
-func (ps Personers) NumAliveGood() int {
-	var n int
-	for _, v := range ps {
-		if !v.GetIsDead() && v.GetCamp() == pb.Camp_GOOD {
-			n++
-		}
-	}
-	return n
-}
-
-// NumAliveEvil returns the number of alive evil people
-func (ps Personers) NumAliveEvil() int {
-	var n int
-	for _, v := range ps {
-		if !v.GetIsDead() && v.GetCamp() == pb.Camp_EVIL {
-			n++
-		}
-	}
-	return n
-}
-
-// IsFinish returns whether the game is finish or not
-func (ps Personers) IsFinish() bool {
-	nAliveGood := ps.NumAliveGood()
-	nAliveEvil := ps.NumAliveEvil()
-	if nAliveEvil == 0 {
-		return true
-	}
-	if nAliveGood <= nAliveEvil {
-		return true
-	}
-	return false
-}
-
-// WhichWon returns which camp won
-func (ps Personers) WhichWon() (pb.Camp, error) {
-	nAliveGood := ps.NumAliveGood()
-	nAliveEvil := ps.NumAliveEvil()
-	if nAliveEvil == 0 {
-		return pb.Camp_GOOD, nil
-	}
-	if nAliveGood <= nAliveEvil {
-		return pb.Camp_EVIL, nil
-	}
-	return -1, errors.New("Is not finish the game")
-}
-
-// Init initializes wills of members
-func (ps Personers) Init() {
-	for k := range ps {
-		ps[k].Init()
-	}
-}
-
-// ResolveDeadOrAliveAtNight calls DeadOrAlive of the member of the slice
-func (ps Personers) ResolveDeadOrAliveAtNight() {
-	var candice []Personer
-	for k := range ps {
-		if ps[k].GetDeadWill() > 0 && ps[k].GetAliveWill() == 0 {
-			candice = append(candice, ps[k])
-		}
-	}
-	candice[rand.Intn(len(candice))].SetIsDead(true)
-}
-
-// ResolveDeadOrAliveAtMorning resolve dead or alive at morning state
-func (ps Personers) ResolveDeadOrAliveAtMorning() {
-	var maxVotes int
-	var candice []Personer
-	for k := range ps {
-		nVotes := ps[k].GetVotes()
-		if nVotes > maxVotes {
-			maxVotes = nVotes
-		}
-	}
-	for k := range ps {
-		if ps[k].GetVotes() == maxVotes {
-			candice = append(candice, ps[k])
-		}
-	}
-	candice[rand.Intn(len(candice))].SetIsDead(true)
-}
-
-// ValidKind valids kind with uuid
-func (ps Personers) ValidKind(uid string, kind pb.Kind) bool {
-	for _, v := range ps {
-		if v.GetUUID().String() == uid && v.GetKind() == kind {
-			return true
-		}
-	}
-	return false
-}
-
-// FindPersonerByUUID finds Personer by UUID
-func (ps Personers) FindPersonerByUUID(uid string) (Personer, error) {
-	for _, v := range ps {
-		if v.GetUUID().String() == uid {
-			return v, nil
-		}
-	}
-	return nil, fmt.Errorf("Not found personer of the uuid: %s", uid)
 }
