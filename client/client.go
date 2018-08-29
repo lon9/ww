@@ -20,7 +20,6 @@ import (
 
 // Client is struct for client
 type Client struct {
-	clientUUID uuid.UUID
 	managers   []viewmanagers.ViewManager
 	activeView int
 	players    []*pb.Player
