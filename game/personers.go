@@ -93,7 +93,9 @@ func (ps Personers) ResolveDeadOrAliveAtNight() {
 			candice = append(candice, ps[k])
 		}
 	}
-	candice[rand.Intn(len(candice))].SetIsDead(true)
+	if len(candice) > 0 {
+		candice[rand.Intn(len(candice))].SetIsDead(true)
+	}
 }
 
 // ResolveDeadOrAliveAtMorning resolve dead or alive at morning state
@@ -111,7 +113,9 @@ func (ps Personers) ResolveDeadOrAliveAtMorning() {
 			candice = append(candice, ps[k])
 		}
 	}
-	candice[rand.Intn(len(candice))].SetIsDead(true)
+	if len(candice) > 0 {
+		candice[rand.Intn(len(candice))].SetIsDead(true)
+	}
 }
 
 // ValidKind valids kind with uuid

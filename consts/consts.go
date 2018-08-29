@@ -11,7 +11,7 @@ const (
 	// DiscussionTime is duration of discussion
 	DiscussionTime int = 60
 	// NumPlayers is the number of players
-	NumPlayers int = 5
+	NumPlayers int = 6
 	// NumWarewolf is the number of warewolfs
 	NumWarewolf int = 2
 	// NumTeller is the number of fortune tellers

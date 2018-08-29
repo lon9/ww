@@ -37,3 +37,58 @@ type Personer interface {
 	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	AfterAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 }
+
+// NewPersoner is constructor for Person
+func NewPersoner(id int, name string, kind pb.Kind) Personer {
+	switch kind {
+	case pb.Kind_CITIZEN:
+		return &Citizen{
+			Person{
+				id:   id,
+				uid:  uuid.Must(uuid.NewV4()),
+				kind: kind,
+				camp: pb.Camp_GOOD,
+				name: name,
+			},
+		}
+	case pb.Kind_WAREWOLF:
+		return &Warewolf{
+			Person{
+				id:   id,
+				uid:  uuid.Must(uuid.NewV4()),
+				kind: kind,
+				camp: pb.Camp_EVIL,
+				name: name,
+			},
+		}
+	case pb.Kind_TELLER:
+		return &Teller{
+			Person{
+				id:   id,
+				uid:  uuid.Must(uuid.NewV4()),
+				kind: kind,
+				camp: pb.Camp_GOOD,
+				name: name,
+			},
+		}
+	case pb.Kind_KNIGHT:
+		return &Knight{
+			Person{
+				id:   id,
+				uid:  uuid.Must(uuid.NewV4()),
+				kind: kind,
+				camp: pb.Camp_GOOD,
+				name: name,
+			},
+		}
+	}
+	return &Citizen{
+		Person{
+			id:   id,
+			uid:  uuid.Must(uuid.NewV4()),
+			kind: pb.Kind_CITIZEN,
+			camp: pb.Camp_GOOD,
+			name: name,
+		},
+	}
+}
