@@ -99,28 +99,20 @@ func (s *Server) Run(port string) {
 	// Waiting for hello request
 	go func() {
 		defer close(s.connectionQueue)
-		var numConnected int
-		for entry := range s.connectionQueue {
-			s.personers[numConnected].SetName(entry.Name)
-			entry.ResChan <- s.personers[numConnected]
-			numConnected++
+		for i := 0; i < NumPlayers; i++ {
+			entry := <-s.connectionQueue
+			s.personers[i].SetName(entry.Name)
+			entry.ResChan <- s.personers[i]
 			log.Printf("%s is connected", entry.Name)
-			if numConnected == NumPlayers {
-				break
-			}
 		}
 	}()
 
 	// Waiting for state request
 	go func() {
 		defer close(s.stateQueue)
-		var numConnected int
-		for ch := range s.stateQueue {
+		for i := 0; i < NumPlayers; i++ {
+			ch := <-s.stateQueue
 			s.stateBroadcastChans = append(s.stateBroadcastChans, ch)
-			numConnected++
-			if numConnected == NumPlayers {
-				break
-			}
 		}
 		log.Println("All players ready")
 		s.changeState(pb.State_NIGHT)

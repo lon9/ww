@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log"
@@ -127,7 +126,7 @@ func (c *Client) nextView(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
-	ctx, cancel := xcontext.WithCancel(context.Background())
+	ctx, cancel := xcontext.WithCancel(xcontext.Background())
 	defer cancel()
 	stream, err := client.State(ctx, &pb.StateRequest{
 		Uuid: c.personer.GetUUID().String(),
@@ -135,7 +134,6 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 	if err != nil {
 		panic(err)
 	}
-	defer stream.CloseSend()
 	for {
 		res, err := stream.Recv()
 		if err == io.EOF {
