@@ -12,6 +12,7 @@ service WW{
   rpc Protect(ProtectRequest)returns (ProtectResponse);
   rpc Tell(TellRequest)returns (TellResponse);
   rpc Sleep(SleepRequest)returns (SleepResponse);
+  rpc Dead(DeadRequest)returns (DeadResponse);
   rpc Restart(RestartRequest)returns (RestartResponse);
 }
 
@@ -92,6 +93,13 @@ message SleepRequest{
 }
 
 message SleepResponse{
+}
+
+message DeadRequest{
+  string src_uuid = 1;
+}
+
+message DeadResponse{
 }
 
 message RestartRequest{

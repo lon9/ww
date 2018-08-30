@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// connectionEntry is used to decide player's job
 type connectionEntry struct {
 	Name    string
 	ResChan chan game.Personer
@@ -60,6 +61,7 @@ func (s *Server) Run(port string) {
 	}
 }
 
+// start set settings of the game and wait for connections
 func (s *Server) start() {
 
 	// Initialize server
@@ -122,25 +124,30 @@ func (s *Server) start() {
 	}()
 }
 
-func (s *Server) stop() {
-	// Closing stateBroadcastChans
-	for i := range s.stateBroadcastChans {
-		close(s.stateBroadcastChans[i])
+// reasign reasigns player's job
+func (s *Server) reasign() {
+	s.restartVote = 0
+	n := len(s.personers)
+	for i := n - 1; i >= 0; i-- {
+		j := rand.Intn(i + 1)
+		s.personers[i], s.personers[j] = s.personers[j], s.personers[i]
+	}
+	for k := range s.personers {
+		s.personers[k].SetID(k)
+		s.personers[k].SetIsDead(false)
 	}
 }
 
+// gameLoop sync game state with clients
 func (s *Server) gameLoop() {
 	for {
 		// Waiting responses from clients
-		numAlive := s.personers.NumAlive()
-		s.finishActionCh = make(chan string, numAlive)
-		personMap := make(map[string]bool, numAlive)
+		s.finishActionCh = make(chan string, consts.NumPlayers)
+		personMap := make(map[string]bool, consts.NumPlayers)
 		for _, v := range s.personers {
-			if !v.GetIsDead() {
-				personMap[v.GetUUID().String()] = false
-			}
+			personMap[v.GetUUID().String()] = false
 		}
-		for i := 0; i < numAlive; i++ {
+		for i := 0; i < consts.NumPlayers; i++ {
 			uuid := <-s.finishActionCh
 			if v, ok := personMap[uuid]; !ok || v {
 				return
@@ -148,6 +155,19 @@ func (s *Server) gameLoop() {
 			personMap[uuid] = true
 		}
 		close(s.finishActionCh)
+
+		if s.state == pb.State_AFTER {
+			if s.restartVote == consts.NumPlayers {
+				// If all player want to restart, restart the server.
+				log.Println("Restarting...")
+				s.reasign()
+				s.changeState(pb.State_NIGHT)
+				continue
+			}
+			log.Println("Shutting down...")
+			s.grpcServer.Stop()
+			return
+		}
 
 		// Decide dead or alive of the players
 		switch s.state {
@@ -160,25 +180,17 @@ func (s *Server) gameLoop() {
 		// If the game is finished, transition to after state
 		if s.personers.IsFinish() {
 			s.changeState(pb.State_AFTER)
-			return
+			continue
 		}
 
+		// Transition to next state
 		switch s.state {
 		case pb.State_BEFORE:
-			s.changeState(pb.State_MORNING)
+			s.changeState(pb.State_NIGHT)
 		case pb.State_MORNING:
 			s.changeState(pb.State_NIGHT)
 		case pb.State_NIGHT:
 			s.changeState(pb.State_MORNING)
-		case pb.State_AFTER:
-			s.stop()
-			if s.restartVote == consts.NumPlayers {
-				// If all player want to restart, restart server.
-				s.start()
-				return
-			}
-			s.grpcServer.GracefulStop()
-			return
 		}
 	}
 }
@@ -215,6 +227,8 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 			State: s.state,
 		}
 		if s.state == pb.State_AFTER {
+
+			// If the state is after, send all players properties
 			res.Players = personer.ConvertAfter(s.personers)
 		} else {
 			res.Players = personer.ConvertPersoners(s.personers)
@@ -286,6 +300,12 @@ func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepRes
 	return new(pb.SleepResponse), nil
 }
 
+// Dead handles Dead request
+func (s *Server) Dead(ctx xcontext.Context, req *pb.DeadRequest) (*pb.DeadResponse, error) {
+	s.finishActionCh <- req.GetSrcUuid()
+	return new(pb.DeadResponse), nil
+}
+
 // Restart handles Restart request
 func (s *Server) Restart(ctx xcontext.Context, req *pb.RestartRequest) (*pb.RestartResponse, error) {
 	s.actionMutex.Lock()
@@ -299,6 +319,7 @@ func (s *Server) Restart(ctx xcontext.Context, req *pb.RestartRequest) (*pb.Rest
 
 func (s *Server) changeState(state pb.State) {
 	// Initializes before changing state
+	log.Println(state)
 	s.personers.Init()
 	s.state = state
 	for i := range s.stateBroadcastChans {

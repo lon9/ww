@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jroimartin/gocui"
@@ -19,7 +20,9 @@ type Knight struct {
 func (k *Knight) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if k.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := k.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 

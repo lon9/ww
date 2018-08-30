@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jroimartin/gocui"
@@ -20,7 +21,9 @@ type Teller struct {
 func (t *Teller) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if t.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := t.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 

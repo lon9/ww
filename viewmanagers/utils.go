@@ -1,8 +1,6 @@
 package viewmanagers
 
 import (
-	"fmt"
-
 	"github.com/jroimartin/gocui"
 )
 
@@ -73,19 +71,6 @@ func CursorUpWithRange(v *gocui.View, top int) error {
 func GetLineIndex(v *gocui.View) int {
 	_, cy := v.Cursor()
 	return cy
-}
-
-// DrawDeadView draws view for dead
-func DrawDeadView(g *gocui.Gui, viewID string) {
-	g.Update(func(g *gocui.Gui) error {
-		v, err := g.View(viewID)
-		if err != nil {
-			return err
-		}
-		v.Clear()
-		fmt.Fprintln(v, "You're already dead")
-		return nil
-	})
 }
 
 // SetCurrentViewOnTop set the view on top

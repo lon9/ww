@@ -63,7 +63,9 @@ func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if w.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := w.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
