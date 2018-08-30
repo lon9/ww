@@ -112,8 +112,9 @@ message RestartResponse{
 
 message Player{
   int32 id = 1;
-  Kind kind = 2;
-  Camp camp = 3;
-  bool is_dead = 4;
-  string name = 5;
+  string uuid = 2;
+  Kind kind = 3;
+  Camp camp = 4;
+  bool is_dead = 5;
+  string name = 6;
 }

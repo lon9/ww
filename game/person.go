@@ -129,15 +129,6 @@ func (p *Person) Init() {
 	p.aliveWill = 0
 }
 
-// Update updates status
-func (p *Person) Update(players []*pb.Player) {
-	for _, player := range players {
-		if p.GetID() == int(player.GetId()) {
-			p.SetIsDead(player.GetIsDead())
-		}
-	}
-}
-
 // ConvertPersoners converts Personers to []*pb.Player
 func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 	players := make([]*pb.Player, len(personers))
@@ -147,6 +138,10 @@ func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 			Id:     int32(v.GetID()),
 			Name:   v.GetName(),
 			IsDead: v.GetIsDead(),
+		}
+		if p.GetUUID() == v.GetUUID() {
+			player.Kind = v.GetKind()
+			player.Uuid = v.GetUUID().String()
 		}
 		players[i] = player
 	}
@@ -178,15 +173,27 @@ func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 		if err != nil {
 			return err
 		}
+		v.Highlight = true
+		v.SelBgColor = gocui.ColorCyan
+		v.SelFgColor = gocui.ColorBlack
 		v.Clear()
-		for _, player := range players {
+		for i, player := range players {
 			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-			if player.GetIsDead() {
-				fmt.Fprint(v, "Dead")
-			} else {
-				fmt.Fprint(v, "Alive")
+			kind, err := consts.GetKind(player.GetKind())
+			if err != nil {
+				return err
 			}
-			fmt.Fprintln(v)
+			fmt.Fprintf(v, "%s ", kind)
+			if player.GetIsDead() {
+				fmt.Fprintln(v, "x")
+			} else {
+				fmt.Fprintln(v, "o")
+			}
+			if player.GetUuid() == p.GetUUID().String() {
+				if err := v.SetCursor(0, i); err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	})
@@ -256,7 +263,7 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 	// Make player list that excludes myself and dead peoples
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != p.GetID() {
+		if !player.GetIsDead() && player.GetUuid() != p.GetUUID().String() {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}

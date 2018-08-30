@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -197,6 +198,9 @@ func (s *Server) gameLoop() {
 
 // Hello handles Hello request
 func (s *Server) Hello(ctx xcontext.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
+	if s.personers.N() == consts.NumPlayers {
+		return nil, status.Error(codes.Unavailable, "Connection limit exceeded")
+	}
 	entry := &connectionEntry{
 		Name:    req.GetName(),
 		ResChan: make(chan game.Personer),
@@ -218,6 +222,9 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 	ch := make(chan bool)
 	defer close(ch)
 	s.stateQueue <- ch
+	if !s.personers.ValidUUID(req.GetUuid()) {
+		return status.Error(codes.InvalidArgument, "Bad request")
+	}
 	personer, err := s.personers.FindPersonerByUUID(req.GetUuid())
 	if err != nil {
 		return err
@@ -258,6 +265,10 @@ func (s *Server) Bite(ctx xcontext.Context, req *pb.BiteRequest) (*pb.BiteRespon
 // Vote handles Vote request
 func (s *Server) Vote(ctx xcontext.Context, req *pb.VoteRequest) (*pb.VoteResponse, error) {
 	s.actionMutex.Lock()
+	if !s.personers.ValidUUID(req.GetSrcUuid()) {
+		s.actionMutex.Unlock()
+		return nil, status.Error(codes.InvalidArgument, "Bad request")
+	}
 	id := int(req.GetDstId())
 	s.personers[id].IncVotes()
 	s.actionMutex.Unlock()
@@ -296,12 +307,24 @@ func (s *Server) Tell(ctx xcontext.Context, req *pb.TellRequest) (*pb.TellRespon
 
 // Sleep handles Sleep request
 func (s *Server) Sleep(ctx xcontext.Context, req *pb.SleepRequest) (*pb.SleepResponse, error) {
+	s.actionMutex.Lock()
+	if !s.personers.ValidUUID(req.GetSrcUuid()) {
+		s.actionMutex.Unlock()
+		return nil, status.Error(codes.InvalidArgument, "Bad request")
+	}
+	s.actionMutex.Unlock()
 	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.SleepResponse), nil
 }
 
 // Dead handles Dead request
 func (s *Server) Dead(ctx xcontext.Context, req *pb.DeadRequest) (*pb.DeadResponse, error) {
+	s.actionMutex.Lock()
+	if !s.personers.ValidUUID(req.GetSrcUuid()) {
+		s.actionMutex.Unlock()
+		return nil, status.Error(codes.InvalidArgument, "Bad request")
+	}
+	s.actionMutex.Unlock()
 	s.finishActionCh <- req.GetSrcUuid()
 	return new(pb.DeadResponse), nil
 }
@@ -309,6 +332,10 @@ func (s *Server) Dead(ctx xcontext.Context, req *pb.DeadRequest) (*pb.DeadRespon
 // Restart handles Restart request
 func (s *Server) Restart(ctx xcontext.Context, req *pb.RestartRequest) (*pb.RestartResponse, error) {
 	s.actionMutex.Lock()
+	if !s.personers.ValidUUID(req.GetSrcUuid()) {
+		s.actionMutex.Unlock()
+		return nil, status.Error(codes.InvalidArgument, "Bad request")
+	}
 	if req.GetIsRestart() {
 		s.restartVote++
 	}
@@ -319,9 +346,11 @@ func (s *Server) Restart(ctx xcontext.Context, req *pb.RestartRequest) (*pb.Rest
 
 func (s *Server) changeState(state pb.State) {
 	// Initializes before changing state
-	log.Println(state)
+	log.Println("state:", state)
 	s.personers.Init()
 	s.state = state
+	// Add delay because the last person can't see a result
+	time.Sleep(3 * time.Second)
 	for i := range s.stateBroadcastChans {
 		s.stateBroadcastChans[i] <- true
 	}

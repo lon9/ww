@@ -146,7 +146,23 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 		c.mu.Lock()
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
-		c.personer.Update(c.players)
+		// Update my status
+		for _, v := range c.players {
+			if c.personer.GetUUID().String() == v.GetUuid() {
+				if c.personer.GetKind() != v.GetKind() {
+					// If the kind is change, have to re-instantiate Personer
+					c.personer = game.NewPersoner(int(v.GetId()), v.GetName(), v.GetKind())
+					uid, err := uuid.FromString(v.GetUuid())
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					c.personer.SetUUID(uid)
+				}
+				c.personer.SetID(int(v.GetId()))
+				c.personer.SetIsDead(v.GetIsDead())
+			}
+		}
 		c.mu.Unlock()
 		c.doAction(g, client)
 	}

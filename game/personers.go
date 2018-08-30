@@ -128,6 +128,16 @@ func (ps Personers) ValidKind(uid string, kind pb.Kind) bool {
 	return false
 }
 
+// ValidUUID validates UUID
+func (ps Personers) ValidUUID(uid string) bool {
+	for _, v := range ps {
+		if v.GetUUID().String() == uid {
+			return true
+		}
+	}
+	return false
+}
+
 // FindPersonerByUUID finds Personer by UUID
 func (ps Personers) FindPersonerByUUID(uid string) (Personer, error) {
 	for _, v := range ps {
@@ -136,4 +146,14 @@ func (ps Personers) FindPersonerByUUID(uid string) (Personer, error) {
 		}
 	}
 	return nil, fmt.Errorf("Not found personer of the uuid: %s", uid)
+}
+
+// N returns the number of Personer has name
+func (ps Personers) N() (cnt int) {
+	for _, v := range ps {
+		if v.GetName() != "" {
+			cnt++
+		}
+	}
+	return cnt
 }

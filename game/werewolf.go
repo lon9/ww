@@ -26,37 +26,15 @@ func (w *Werewolf) ConvertPersoners(personers Personers) []*pb.Player {
 			Name:   v.GetName(),
 			IsDead: v.GetIsDead(),
 		}
+		if w.GetUUID() == v.GetUUID() {
+			player.Uuid = v.GetUUID().String()
+		}
 		if v.GetKind() == pb.Kind_WEREWOLF {
 			player.Kind = v.GetKind()
 		}
 		players[i] = player
 	}
 	return players
-}
-
-// UpdateInfo updates information of left view (Override)
-func (w *Werewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
-	g.Update(func(g *gocui.Gui) error {
-		// Update left view
-		v, err := g.View(viewmanagers.LeftViewID)
-		if err != nil {
-			return err
-		}
-		v.Clear()
-		for _, player := range players {
-			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-			if player.GetIsDead() {
-				fmt.Fprint(v, "Dead")
-			} else {
-				fmt.Fprint(v, "Alive")
-			}
-			if player.GetKind() == pb.Kind_WEREWOLF {
-				fmt.Fprint(v, " W")
-			}
-			fmt.Fprintln(v)
-		}
-		return nil
-	})
 }
 
 // NightAction is action at night (Override)
@@ -72,7 +50,7 @@ func (w *Werewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 	// Make player list that excludes myself and dead peoples and my kind
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != w.GetID() && player.GetKind() != pb.Kind_WEREWOLF {
+		if !player.GetIsDead() && player.GetUuid() != w.GetUUID().String() && player.GetKind() != pb.Kind_WEREWOLF {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}
