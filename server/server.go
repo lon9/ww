@@ -77,8 +77,8 @@ func (s *Server) start() {
 
 	personers := make(game.Personers)
 	var idx int
-	for i := 0; i < consts.NumWarewolf; i++ {
-		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_WAREWOLF)
+	for i := 0; i < consts.NumWerewolf; i++ {
+		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_WEREWOLF)
 		idx++
 	}
 	for i := 0; i < consts.NumTeller; i++ {
@@ -89,7 +89,7 @@ func (s *Server) start() {
 		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_KNIGHT)
 		idx++
 	}
-	for i := 0; i < consts.NumPlayers-consts.NumWarewolf-consts.NumKnight-consts.NumTeller; i++ {
+	for i := 0; i < consts.NumPlayers-consts.NumWerewolf-consts.NumKnight-consts.NumTeller; i++ {
 		personers[indice[idx]] = game.NewPersoner(indice[idx], "", pb.Kind_CITIZEN)
 		idx++
 	}
@@ -244,7 +244,7 @@ func (s *Server) State(req *pb.StateRequest, stream pb.WW_StateServer) error {
 // Bite handles Bite request
 func (s *Server) Bite(ctx xcontext.Context, req *pb.BiteRequest) (*pb.BiteResponse, error) {
 	s.actionMutex.Lock()
-	if !s.personers.ValidKind(req.GetSrcUuid(), pb.Kind_WAREWOLF) {
+	if !s.personers.ValidKind(req.GetSrcUuid(), pb.Kind_WEREWOLF) {
 		s.actionMutex.Unlock()
 		return nil, status.Error(codes.InvalidArgument, "Bad request")
 	}

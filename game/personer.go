@@ -52,8 +52,8 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 				name: name,
 			},
 		}
-	case pb.Kind_WAREWOLF:
-		return &Warewolf{
+	case pb.Kind_WEREWOLF:
+		return &Werewolf{
 			Person{
 				id:   id,
 				uid:  uuid.Must(uuid.NewV4()),

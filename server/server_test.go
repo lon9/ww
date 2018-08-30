@@ -60,15 +60,15 @@ func TestConnection(t *testing.T) {
 				t.Errorf("State should be night: %v", stateRes.GetState())
 			}
 
-			if res.GetKind() == pb.Kind_WAREWOLF {
+			if res.GetKind() == pb.Kind_WEREWOLF {
 				var wwCount int
 				for _, v := range stateRes.GetPlayers() {
-					if v.GetKind() == pb.Kind_WAREWOLF {
+					if v.GetKind() == pb.Kind_WEREWOLF {
 						wwCount++
 					}
 				}
 				if wwCount != 2 {
-					t.Error("should be send warewolf kind to warewolf")
+					t.Error("should be send werewolf kind to werewolf")
 				}
 			}
 

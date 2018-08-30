@@ -11,13 +11,13 @@ import (
 	xcontext "golang.org/x/net/context"
 )
 
-// Warewolf is struct for warewolf
-type Warewolf struct {
+// Werewolf is struct for werewolf
+type Werewolf struct {
 	Person
 }
 
 // ConvertPersoners converts Personers to []*pb.Player (Override)
-func (w *Warewolf) ConvertPersoners(personers Personers) []*pb.Player {
+func (w *Werewolf) ConvertPersoners(personers Personers) []*pb.Player {
 	players := make([]*pb.Player, len(personers))
 
 	for i, v := range personers {
@@ -26,7 +26,7 @@ func (w *Warewolf) ConvertPersoners(personers Personers) []*pb.Player {
 			Name:   v.GetName(),
 			IsDead: v.GetIsDead(),
 		}
-		if v.GetKind() == pb.Kind_WAREWOLF {
+		if v.GetKind() == pb.Kind_WEREWOLF {
 			player.Kind = v.GetKind()
 		}
 		players[i] = player
@@ -35,7 +35,7 @@ func (w *Warewolf) ConvertPersoners(personers Personers) []*pb.Player {
 }
 
 // UpdateInfo updates information of left view (Override)
-func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
+func (w *Werewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 	g.Update(func(g *gocui.Gui) error {
 		// Update left view
 		v, err := g.View(viewmanagers.LeftViewID)
@@ -50,7 +50,7 @@ func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 			} else {
 				fmt.Fprint(v, "Alive")
 			}
-			if player.GetKind() == pb.Kind_WAREWOLF {
+			if player.GetKind() == pb.Kind_WEREWOLF {
 				fmt.Fprint(v, " W")
 			}
 			fmt.Fprintln(v)
@@ -60,7 +60,7 @@ func (w *Warewolf) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 }
 
 // NightAction is action at night (Override)
-func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+func (w *Werewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if w.GetIsDead() {
 		if err := w.deadAction(g, c); err != nil {
@@ -72,7 +72,7 @@ func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 	// Make player list that excludes myself and dead peoples and my kind
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != w.GetID() && player.GetKind() != pb.Kind_WAREWOLF {
+		if !player.GetIsDead() && int(player.GetId()) != w.GetID() && player.GetKind() != pb.Kind_WEREWOLF {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}
@@ -105,7 +105,7 @@ func (w *Warewolf) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 }
 
 // AfterAction is action when the game is finished (Override)
-func (w *Warewolf) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
+func (w *Werewolf) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	personers := make(Personers)
 	personers.FromPlayers(players)
 	wonCamp, err := personers.WhichWon()
