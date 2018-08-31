@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jroimartin/gocui"
@@ -19,14 +20,16 @@ type Knight struct {
 func (k *Knight) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if k.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := k.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
-	// Make player list that excludes myself and dead peoples and my kind
+	// Make player list that excludes myself and dead peoples
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != k.GetID() {
+		if !player.GetIsDead() && player.GetUuid() != k.GetUUID().String() {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}

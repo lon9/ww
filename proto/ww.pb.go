@@ -43,27 +43,27 @@ func (x Camp) String() string {
 	return proto.EnumName(Camp_name, int32(x))
 }
 func (Camp) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{0}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{0}
 }
 
 type Kind int32
 
 const (
 	Kind_CITIZEN  Kind = 0
-	Kind_WAREWOLF Kind = 1
+	Kind_WEREWOLF Kind = 1
 	Kind_TELLER   Kind = 2
 	Kind_KNIGHT   Kind = 3
 )
 
 var Kind_name = map[int32]string{
 	0: "CITIZEN",
-	1: "WAREWOLF",
+	1: "WEREWOLF",
 	2: "TELLER",
 	3: "KNIGHT",
 }
 var Kind_value = map[string]int32{
 	"CITIZEN":  0,
-	"WAREWOLF": 1,
+	"WEREWOLF": 1,
 	"TELLER":   2,
 	"KNIGHT":   3,
 }
@@ -72,7 +72,7 @@ func (x Kind) String() string {
 	return proto.EnumName(Kind_name, int32(x))
 }
 func (Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{1}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{1}
 }
 
 type State int32
@@ -101,7 +101,7 @@ func (x State) String() string {
 	return proto.EnumName(State_name, int32(x))
 }
 func (State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{2}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{2}
 }
 
 type HelloRequest struct {
@@ -115,7 +115,7 @@ func (m *HelloRequest) Reset()         { *m = HelloRequest{} }
 func (m *HelloRequest) String() string { return proto.CompactTextString(m) }
 func (*HelloRequest) ProtoMessage()    {}
 func (*HelloRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{0}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{0}
 }
 func (m *HelloRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HelloRequest.Unmarshal(m, b)
@@ -156,7 +156,7 @@ func (m *HelloResponse) Reset()         { *m = HelloResponse{} }
 func (m *HelloResponse) String() string { return proto.CompactTextString(m) }
 func (*HelloResponse) ProtoMessage()    {}
 func (*HelloResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{1}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{1}
 }
 func (m *HelloResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HelloResponse.Unmarshal(m, b)
@@ -215,7 +215,7 @@ func (m *StateRequest) Reset()         { *m = StateRequest{} }
 func (m *StateRequest) String() string { return proto.CompactTextString(m) }
 func (*StateRequest) ProtoMessage()    {}
 func (*StateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{2}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{2}
 }
 func (m *StateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StateRequest.Unmarshal(m, b)
@@ -254,7 +254,7 @@ func (m *StateResponse) Reset()         { *m = StateResponse{} }
 func (m *StateResponse) String() string { return proto.CompactTextString(m) }
 func (*StateResponse) ProtoMessage()    {}
 func (*StateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{3}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{3}
 }
 func (m *StateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StateResponse.Unmarshal(m, b)
@@ -300,7 +300,7 @@ func (m *VoteRequest) Reset()         { *m = VoteRequest{} }
 func (m *VoteRequest) String() string { return proto.CompactTextString(m) }
 func (*VoteRequest) ProtoMessage()    {}
 func (*VoteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{4}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{4}
 }
 func (m *VoteRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VoteRequest.Unmarshal(m, b)
@@ -344,7 +344,7 @@ func (m *VoteResponse) Reset()         { *m = VoteResponse{} }
 func (m *VoteResponse) String() string { return proto.CompactTextString(m) }
 func (*VoteResponse) ProtoMessage()    {}
 func (*VoteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{5}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{5}
 }
 func (m *VoteResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VoteResponse.Unmarshal(m, b)
@@ -376,7 +376,7 @@ func (m *BiteRequest) Reset()         { *m = BiteRequest{} }
 func (m *BiteRequest) String() string { return proto.CompactTextString(m) }
 func (*BiteRequest) ProtoMessage()    {}
 func (*BiteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{6}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{6}
 }
 func (m *BiteRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BiteRequest.Unmarshal(m, b)
@@ -420,7 +420,7 @@ func (m *BiteResponse) Reset()         { *m = BiteResponse{} }
 func (m *BiteResponse) String() string { return proto.CompactTextString(m) }
 func (*BiteResponse) ProtoMessage()    {}
 func (*BiteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{7}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{7}
 }
 func (m *BiteResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BiteResponse.Unmarshal(m, b)
@@ -452,7 +452,7 @@ func (m *ProtectRequest) Reset()         { *m = ProtectRequest{} }
 func (m *ProtectRequest) String() string { return proto.CompactTextString(m) }
 func (*ProtectRequest) ProtoMessage()    {}
 func (*ProtectRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{8}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{8}
 }
 func (m *ProtectRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProtectRequest.Unmarshal(m, b)
@@ -496,7 +496,7 @@ func (m *ProtectResponse) Reset()         { *m = ProtectResponse{} }
 func (m *ProtectResponse) String() string { return proto.CompactTextString(m) }
 func (*ProtectResponse) ProtoMessage()    {}
 func (*ProtectResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{9}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{9}
 }
 func (m *ProtectResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProtectResponse.Unmarshal(m, b)
@@ -528,7 +528,7 @@ func (m *TellRequest) Reset()         { *m = TellRequest{} }
 func (m *TellRequest) String() string { return proto.CompactTextString(m) }
 func (*TellRequest) ProtoMessage()    {}
 func (*TellRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{10}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{10}
 }
 func (m *TellRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TellRequest.Unmarshal(m, b)
@@ -573,7 +573,7 @@ func (m *TellResponse) Reset()         { *m = TellResponse{} }
 func (m *TellResponse) String() string { return proto.CompactTextString(m) }
 func (*TellResponse) ProtoMessage()    {}
 func (*TellResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{11}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{11}
 }
 func (m *TellResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TellResponse.Unmarshal(m, b)
@@ -611,7 +611,7 @@ func (m *SleepRequest) Reset()         { *m = SleepRequest{} }
 func (m *SleepRequest) String() string { return proto.CompactTextString(m) }
 func (*SleepRequest) ProtoMessage()    {}
 func (*SleepRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{12}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{12}
 }
 func (m *SleepRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SleepRequest.Unmarshal(m, b)
@@ -648,7 +648,7 @@ func (m *SleepResponse) Reset()         { *m = SleepResponse{} }
 func (m *SleepResponse) String() string { return proto.CompactTextString(m) }
 func (*SleepResponse) ProtoMessage()    {}
 func (*SleepResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{13}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{13}
 }
 func (m *SleepResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SleepResponse.Unmarshal(m, b)
@@ -668,12 +668,157 @@ func (m *SleepResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SleepResponse proto.InternalMessageInfo
 
+type DeadRequest struct {
+	SrcUuid              string   `protobuf:"bytes,1,opt,name=src_uuid,json=srcUuid,proto3" json:"src_uuid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeadRequest) Reset()         { *m = DeadRequest{} }
+func (m *DeadRequest) String() string { return proto.CompactTextString(m) }
+func (*DeadRequest) ProtoMessage()    {}
+func (*DeadRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{14}
+}
+func (m *DeadRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeadRequest.Unmarshal(m, b)
+}
+func (m *DeadRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeadRequest.Marshal(b, m, deterministic)
+}
+func (dst *DeadRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeadRequest.Merge(dst, src)
+}
+func (m *DeadRequest) XXX_Size() int {
+	return xxx_messageInfo_DeadRequest.Size(m)
+}
+func (m *DeadRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeadRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeadRequest proto.InternalMessageInfo
+
+func (m *DeadRequest) GetSrcUuid() string {
+	if m != nil {
+		return m.SrcUuid
+	}
+	return ""
+}
+
+type DeadResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeadResponse) Reset()         { *m = DeadResponse{} }
+func (m *DeadResponse) String() string { return proto.CompactTextString(m) }
+func (*DeadResponse) ProtoMessage()    {}
+func (*DeadResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{15}
+}
+func (m *DeadResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeadResponse.Unmarshal(m, b)
+}
+func (m *DeadResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeadResponse.Marshal(b, m, deterministic)
+}
+func (dst *DeadResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeadResponse.Merge(dst, src)
+}
+func (m *DeadResponse) XXX_Size() int {
+	return xxx_messageInfo_DeadResponse.Size(m)
+}
+func (m *DeadResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeadResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeadResponse proto.InternalMessageInfo
+
+type RestartRequest struct {
+	SrcUuid              string   `protobuf:"bytes,1,opt,name=src_uuid,json=srcUuid,proto3" json:"src_uuid,omitempty"`
+	IsRestart            bool     `protobuf:"varint,2,opt,name=is_restart,json=isRestart,proto3" json:"is_restart,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RestartRequest) Reset()         { *m = RestartRequest{} }
+func (m *RestartRequest) String() string { return proto.CompactTextString(m) }
+func (*RestartRequest) ProtoMessage()    {}
+func (*RestartRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{16}
+}
+func (m *RestartRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RestartRequest.Unmarshal(m, b)
+}
+func (m *RestartRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RestartRequest.Marshal(b, m, deterministic)
+}
+func (dst *RestartRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RestartRequest.Merge(dst, src)
+}
+func (m *RestartRequest) XXX_Size() int {
+	return xxx_messageInfo_RestartRequest.Size(m)
+}
+func (m *RestartRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RestartRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RestartRequest proto.InternalMessageInfo
+
+func (m *RestartRequest) GetSrcUuid() string {
+	if m != nil {
+		return m.SrcUuid
+	}
+	return ""
+}
+
+func (m *RestartRequest) GetIsRestart() bool {
+	if m != nil {
+		return m.IsRestart
+	}
+	return false
+}
+
+type RestartResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RestartResponse) Reset()         { *m = RestartResponse{} }
+func (m *RestartResponse) String() string { return proto.CompactTextString(m) }
+func (*RestartResponse) ProtoMessage()    {}
+func (*RestartResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{17}
+}
+func (m *RestartResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RestartResponse.Unmarshal(m, b)
+}
+func (m *RestartResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RestartResponse.Marshal(b, m, deterministic)
+}
+func (dst *RestartResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RestartResponse.Merge(dst, src)
+}
+func (m *RestartResponse) XXX_Size() int {
+	return xxx_messageInfo_RestartResponse.Size(m)
+}
+func (m *RestartResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RestartResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RestartResponse proto.InternalMessageInfo
+
 type Player struct {
 	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Kind                 Kind     `protobuf:"varint,2,opt,name=kind,proto3,enum=ww.Kind" json:"kind,omitempty"`
-	Camp                 Camp     `protobuf:"varint,3,opt,name=camp,proto3,enum=ww.Camp" json:"camp,omitempty"`
-	IsDead               bool     `protobuf:"varint,4,opt,name=is_dead,json=isDead,proto3" json:"is_dead,omitempty"`
-	Name                 string   `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	Kind                 Kind     `protobuf:"varint,3,opt,name=kind,proto3,enum=ww.Kind" json:"kind,omitempty"`
+	Camp                 Camp     `protobuf:"varint,4,opt,name=camp,proto3,enum=ww.Camp" json:"camp,omitempty"`
+	IsDead               bool     `protobuf:"varint,5,opt,name=is_dead,json=isDead,proto3" json:"is_dead,omitempty"`
+	Name                 string   `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -683,7 +828,7 @@ func (m *Player) Reset()         { *m = Player{} }
 func (m *Player) String() string { return proto.CompactTextString(m) }
 func (*Player) ProtoMessage()    {}
 func (*Player) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ww_bf24c6214e2dda08, []int{14}
+	return fileDescriptor_ww_a7cc7059e88e5c6b, []int{18}
 }
 func (m *Player) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Player.Unmarshal(m, b)
@@ -708,6 +853,13 @@ func (m *Player) GetId() int32 {
 		return m.Id
 	}
 	return 0
+}
+
+func (m *Player) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
 }
 
 func (m *Player) GetKind() Kind {
@@ -753,6 +905,10 @@ func init() {
 	proto.RegisterType((*TellResponse)(nil), "ww.TellResponse")
 	proto.RegisterType((*SleepRequest)(nil), "ww.SleepRequest")
 	proto.RegisterType((*SleepResponse)(nil), "ww.SleepResponse")
+	proto.RegisterType((*DeadRequest)(nil), "ww.DeadRequest")
+	proto.RegisterType((*DeadResponse)(nil), "ww.DeadResponse")
+	proto.RegisterType((*RestartRequest)(nil), "ww.RestartRequest")
+	proto.RegisterType((*RestartResponse)(nil), "ww.RestartResponse")
 	proto.RegisterType((*Player)(nil), "ww.Player")
 	proto.RegisterEnum("ww.Camp", Camp_name, Camp_value)
 	proto.RegisterEnum("ww.Kind", Kind_name, Kind_value)
@@ -778,6 +934,8 @@ type WWClient interface {
 	Protect(ctx context.Context, in *ProtectRequest, opts ...grpc.CallOption) (*ProtectResponse, error)
 	Tell(ctx context.Context, in *TellRequest, opts ...grpc.CallOption) (*TellResponse, error)
 	Sleep(ctx context.Context, in *SleepRequest, opts ...grpc.CallOption) (*SleepResponse, error)
+	Dead(ctx context.Context, in *DeadRequest, opts ...grpc.CallOption) (*DeadResponse, error)
+	Restart(ctx context.Context, in *RestartRequest, opts ...grpc.CallOption) (*RestartResponse, error)
 }
 
 type wWClient struct {
@@ -874,6 +1032,24 @@ func (c *wWClient) Sleep(ctx context.Context, in *SleepRequest, opts ...grpc.Cal
 	return out, nil
 }
 
+func (c *wWClient) Dead(ctx context.Context, in *DeadRequest, opts ...grpc.CallOption) (*DeadResponse, error) {
+	out := new(DeadResponse)
+	err := c.cc.Invoke(ctx, "/ww.WW/Dead", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *wWClient) Restart(ctx context.Context, in *RestartRequest, opts ...grpc.CallOption) (*RestartResponse, error) {
+	out := new(RestartResponse)
+	err := c.cc.Invoke(ctx, "/ww.WW/Restart", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WWServer is the server API for WW service.
 type WWServer interface {
 	Hello(context.Context, *HelloRequest) (*HelloResponse, error)
@@ -883,6 +1059,8 @@ type WWServer interface {
 	Protect(context.Context, *ProtectRequest) (*ProtectResponse, error)
 	Tell(context.Context, *TellRequest) (*TellResponse, error)
 	Sleep(context.Context, *SleepRequest) (*SleepResponse, error)
+	Dead(context.Context, *DeadRequest) (*DeadResponse, error)
+	Restart(context.Context, *RestartRequest) (*RestartResponse, error)
 }
 
 func RegisterWWServer(s *grpc.Server, srv WWServer) {
@@ -1018,6 +1196,42 @@ func _WW_Sleep_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WW_Dead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WWServer).Dead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ww.WW/Dead",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WWServer).Dead(ctx, req.(*DeadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WW_Restart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WWServer).Restart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ww.WW/Restart",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WWServer).Restart(ctx, req.(*RestartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _WW_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ww.WW",
 	HandlerType: (*WWServer)(nil),
@@ -1046,6 +1260,14 @@ var _WW_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Sleep",
 			Handler:    _WW_Sleep_Handler,
 		},
+		{
+			MethodName: "Dead",
+			Handler:    _WW_Dead_Handler,
+		},
+		{
+			MethodName: "Restart",
+			Handler:    _WW_Restart_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -1057,45 +1279,50 @@ var _WW_serviceDesc = grpc.ServiceDesc{
 	Metadata: "proto/ww.proto",
 }
 
-func init() { proto.RegisterFile("proto/ww.proto", fileDescriptor_ww_bf24c6214e2dda08) }
+func init() { proto.RegisterFile("proto/ww.proto", fileDescriptor_ww_a7cc7059e88e5c6b) }
 
-var fileDescriptor_ww_bf24c6214e2dda08 = []byte{
-	// 588 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcf, 0x8b, 0xda, 0x50,
-	0x10, 0xc7, 0x4d, 0x4c, 0x8c, 0x8e, 0x1a, 0xdf, 0xbe, 0x52, 0x6a, 0x65, 0xa1, 0x12, 0x7a, 0x50,
-	0x11, 0x5b, 0x2c, 0x14, 0x7a, 0x2a, 0xeb, 0x6e, 0x74, 0xc3, 0x5a, 0x5d, 0xde, 0x5a, 0x85, 0xbd,
-	0x48, 0x6a, 0xde, 0x21, 0x34, 0x9a, 0xd4, 0x44, 0x42, 0x8f, 0xfd, 0xe3, 0xfa, 0x7f, 0x95, 0xf7,
-	0x43, 0x13, 0xe9, 0x42, 0x61, 0x7b, 0x72, 0x98, 0x7c, 0xdf, 0x77, 0x66, 0x98, 0xcf, 0x08, 0x66,
-	0xb4, 0x0f, 0x93, 0xf0, 0x5d, 0x9a, 0x0e, 0x78, 0x80, 0xd5, 0x34, 0xb5, 0x2c, 0xa8, 0xdd, 0xd2,
-	0x20, 0x08, 0x09, 0xfd, 0x71, 0xa0, 0x71, 0x82, 0x31, 0x68, 0x3b, 0x77, 0x4b, 0x9b, 0x4a, 0x5b,
-	0xe9, 0x54, 0x08, 0x8f, 0x2d, 0x0a, 0x75, 0xa9, 0x89, 0xa3, 0x70, 0x17, 0x53, 0x6c, 0x82, 0xea,
-	0x7b, 0x5c, 0xa2, 0x13, 0xd5, 0xf7, 0xd8, 0xa3, 0xc3, 0xc1, 0xf7, 0x9a, 0xaa, 0x78, 0xc4, 0xe2,
-	0x93, 0x51, 0x31, 0x33, 0xc2, 0x97, 0xa0, 0x7d, 0xf7, 0x77, 0x5e, 0x53, 0x6b, 0x2b, 0x1d, 0x73,
-	0x58, 0x1e, 0xa4, 0xe9, 0xe0, 0xce, 0xdf, 0x79, 0x84, 0x67, 0x59, 0x2b, 0x0f, 0x89, 0x9b, 0xd0,
-	0x5c, 0x2b, 0xdc, 0x55, 0xc9, 0x5c, 0xad, 0x25, 0xd4, 0xa5, 0x46, 0xb6, 0xf2, 0x06, 0xf4, 0x98,
-	0x25, 0xb8, 0xca, 0x1c, 0x56, 0x98, 0xa7, 0x50, 0x88, 0x3c, 0x7e, 0x0b, 0x46, 0x14, 0xb8, 0x3f,
-	0xe9, 0x3e, 0x6e, 0xaa, 0xed, 0x62, 0xa7, 0x3a, 0x04, 0x26, 0xb9, 0xe7, 0x29, 0x72, 0xfc, 0x64,
-	0x7d, 0x86, 0xea, 0x32, 0xcc, 0x4a, 0xbf, 0x86, 0x72, 0xbc, 0xdf, 0xac, 0x73, 0xe5, 0x8d, 0x78,
-	0xbf, 0xf9, 0xca, 0xe6, 0x7a, 0x09, 0x25, 0x2f, 0x4e, 0xd6, 0x72, 0x5a, 0x9d, 0xe8, 0x5e, 0x9c,
-	0x38, 0x9e, 0x65, 0x42, 0x4d, 0x18, 0x88, 0xbe, 0x98, 0xe1, 0xc8, 0xff, 0x4f, 0x43, 0x61, 0x20,
-	0x0d, 0x47, 0x60, 0xde, 0xef, 0xc3, 0x84, 0x6e, 0x92, 0xe7, 0x7b, 0x5e, 0x40, 0xe3, 0xe4, 0x91,
-	0xf5, 0xb9, 0xa0, 0x41, 0xf0, 0x7c, 0xcf, 0x3e, 0xd4, 0x84, 0x81, 0x5c, 0xc8, 0x25, 0x68, 0x1b,
-	0x77, 0x1b, 0xc9, 0x7d, 0xf0, 0x1d, 0x5f, 0xbb, 0xdb, 0x88, 0xf0, 0xac, 0xd5, 0x85, 0xda, 0x43,
-	0x40, 0x69, 0xf4, 0xef, 0x7a, 0x56, 0x03, 0xea, 0x52, 0x2a, 0x5b, 0xfd, 0xa5, 0x40, 0x49, 0xec,
-	0xed, 0x2f, 0x00, 0x8f, 0x60, 0xa9, 0x4f, 0x81, 0x75, 0x6a, 0xa9, 0xf8, 0x54, 0x4b, 0xf8, 0x15,
-	0x18, 0x7e, 0xbc, 0xf6, 0xa8, 0x2b, 0xb8, 0x2c, 0x93, 0x92, 0x1f, 0xdf, 0x50, 0x37, 0x23, 0x58,
-	0xcf, 0x08, 0xee, 0xb5, 0x40, 0x63, 0x4f, 0x71, 0x19, 0xb4, 0xc9, 0x7c, 0x7e, 0x83, 0x0a, 0x2c,
-	0xb2, 0x97, 0xce, 0x14, 0x29, 0xbd, 0x4f, 0xa0, 0xb1, 0xa2, 0xb8, 0x0a, 0xc6, 0xb5, 0xb3, 0x70,
-	0x1e, 0xed, 0x19, 0x2a, 0xe0, 0x1a, 0x94, 0x57, 0x57, 0xc4, 0x5e, 0xcd, 0xa7, 0x63, 0xa4, 0x60,
-	0x80, 0xd2, 0xc2, 0x9e, 0x4e, 0x6d, 0x82, 0x54, 0x16, 0xdf, 0xcd, 0x9c, 0xc9, 0xed, 0x02, 0x15,
-	0x7b, 0x1f, 0x41, 0xe7, 0xd0, 0xb2, 0xe4, 0xc8, 0x1e, 0xcf, 0x89, 0x8d, 0x0a, 0xcc, 0xe7, 0xcb,
-	0x9c, 0xcc, 0x9c, 0xd9, 0x04, 0x29, 0xb8, 0x02, 0xba, 0x10, 0xab, 0x2c, 0xbc, 0x1a, 0x2f, 0x6c,
-	0x82, 0x8a, 0xc3, 0xdf, 0x2a, 0xa8, 0xab, 0x15, 0xee, 0x83, 0xce, 0x0f, 0x14, 0x23, 0x36, 0x5b,
-	0xfe, 0x9e, 0x5b, 0x17, 0xb9, 0x8c, 0xdc, 0xd0, 0xe0, 0x58, 0x0c, 0x65, 0xc7, 0x92, 0x57, 0x9f,
-	0x1d, 0xd8, 0x7b, 0x05, 0x77, 0x41, 0x63, 0x68, 0xe3, 0x06, 0xfb, 0x98, 0xbb, 0x92, 0x16, 0xca,
-	0x12, 0xd2, 0xba, 0x0b, 0x1a, 0x83, 0x56, 0x48, 0x73, 0xfc, 0x0b, 0x69, 0x9e, 0x67, 0x3c, 0x04,
-	0x43, 0xb2, 0x88, 0x31, 0xbf, 0xc8, 0x33, 0xb8, 0x5b, 0x2f, 0xce, 0x72, 0x99, 0x3d, 0x63, 0x4d,
-	0xd8, 0xe7, 0xb0, 0x15, 0xf6, 0x67, 0x18, 0xf6, 0x41, 0xe7, 0xf4, 0xc8, 0x21, 0x73, 0xcc, 0xc9,
-	0x21, 0xf3, 0x68, 0x8d, 0x8c, 0x47, 0x9d, 0xff, 0x25, 0x7e, 0x2b, 0xf1, 0x9f, 0x0f, 0x7f, 0x02,
-	0x00, 0x00, 0xff, 0xff, 0xcf, 0x15, 0xca, 0x2e, 0x2b, 0x05, 0x00, 0x00,
+var fileDescriptor_ww_a7cc7059e88e5c6b = []byte{
+	// 663 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x95, 0x5f, 0x6b, 0xdb, 0x3c,
+	0x14, 0xc6, 0x6b, 0xc7, 0xce, 0x9f, 0x93, 0xd4, 0x55, 0xf5, 0xf2, 0xb2, 0x2c, 0x74, 0xac, 0x98,
+	0x5d, 0xa4, 0xa5, 0x64, 0x23, 0x83, 0xc1, 0xae, 0xc6, 0xd2, 0xba, 0x6d, 0xd6, 0x2c, 0x29, 0x6a,
+	0xd6, 0x40, 0x6f, 0x82, 0x17, 0xeb, 0xc2, 0x2c, 0x8d, 0x3d, 0xcb, 0xc5, 0xec, 0x83, 0xec, 0x1b,
+	0xec, 0x83, 0x8e, 0x23, 0xa9, 0xb1, 0x32, 0x0a, 0x2b, 0xdd, 0x55, 0x0e, 0xc7, 0x8f, 0x7e, 0x3a,
+	0x47, 0x3a, 0x8f, 0x02, 0x5e, 0x9a, 0x25, 0x79, 0xf2, 0xba, 0x28, 0x7a, 0x32, 0xa0, 0x76, 0x51,
+	0xf8, 0x3e, 0xb4, 0xce, 0xf9, 0x72, 0x99, 0x30, 0xfe, 0xfd, 0x8e, 0x8b, 0x9c, 0x52, 0x70, 0x56,
+	0xe1, 0x2d, 0x6f, 0x5b, 0xfb, 0x56, 0xb7, 0xc1, 0x64, 0xec, 0x73, 0xd8, 0xd6, 0x1a, 0x91, 0x26,
+	0x2b, 0xc1, 0xa9, 0x07, 0x76, 0x1c, 0x49, 0x89, 0xcb, 0xec, 0x38, 0xc2, 0x45, 0x77, 0x77, 0x71,
+	0xd4, 0xb6, 0xd5, 0x22, 0x8c, 0xd7, 0xa0, 0x4a, 0x09, 0xa2, 0x7b, 0xe0, 0x7c, 0x8b, 0x57, 0x51,
+	0xdb, 0xd9, 0xb7, 0xba, 0x5e, 0xbf, 0xde, 0x2b, 0x8a, 0xde, 0x45, 0xbc, 0x8a, 0x98, 0xcc, 0x62,
+	0x29, 0x57, 0x79, 0x98, 0x73, 0xa3, 0x14, 0x49, 0xb5, 0x4a, 0xaa, 0x7f, 0x0d, 0xdb, 0x5a, 0xa3,
+	0x4b, 0x79, 0x09, 0xae, 0xc0, 0x84, 0x54, 0x79, 0xfd, 0x06, 0x32, 0x95, 0x42, 0xe5, 0xe9, 0x2b,
+	0xa8, 0xa5, 0xcb, 0xf0, 0x07, 0xcf, 0x44, 0xdb, 0xde, 0xaf, 0x74, 0x9b, 0x7d, 0x40, 0xc9, 0xa5,
+	0x4c, 0xb1, 0xfb, 0x4f, 0xfe, 0x07, 0x68, 0x5e, 0x27, 0xe5, 0xd6, 0xcf, 0xa1, 0x2e, 0xb2, 0xc5,
+	0xdc, 0xd8, 0xbe, 0x26, 0xb2, 0xc5, 0x17, 0xec, 0xeb, 0x7f, 0xa8, 0x46, 0x22, 0x9f, 0xeb, 0x6e,
+	0x5d, 0xe6, 0x46, 0x22, 0x1f, 0x46, 0xbe, 0x07, 0x2d, 0x05, 0x50, 0x75, 0x21, 0x70, 0x10, 0xff,
+	0x23, 0x50, 0x01, 0x34, 0x70, 0x00, 0xde, 0x65, 0x96, 0xe4, 0x7c, 0x91, 0x3f, 0x9d, 0xb9, 0x0b,
+	0x3b, 0x6b, 0x46, 0x59, 0xe7, 0x94, 0x2f, 0x97, 0x4f, 0x67, 0x1e, 0x41, 0x4b, 0x01, 0xf4, 0x85,
+	0xec, 0x81, 0xb3, 0x08, 0x6f, 0x53, 0x7d, 0x1f, 0xf2, 0x8e, 0x8f, 0xc3, 0xdb, 0x94, 0xc9, 0xac,
+	0x7f, 0x00, 0xad, 0xab, 0x25, 0xe7, 0xe9, 0xdf, 0xf7, 0xf3, 0x77, 0x60, 0x5b, 0x4b, 0x75, 0xa9,
+	0x5d, 0x68, 0x9e, 0xf0, 0x30, 0x7a, 0xc4, 0x52, 0x0f, 0x5a, 0x4a, 0xa9, 0x57, 0x7e, 0x02, 0x8f,
+	0x71, 0x91, 0x87, 0xd9, 0x63, 0xce, 0xee, 0x05, 0x40, 0x2c, 0xe6, 0x99, 0xd2, 0xcb, 0x5e, 0xeb,
+	0xac, 0x11, 0x0b, 0x0d, 0xc0, 0x33, 0x5c, 0xb3, 0x34, 0xfe, 0xa7, 0x05, 0x55, 0x35, 0x50, 0x8f,
+	0x72, 0xc6, 0xbd, 0x0b, 0x2a, 0x0f, 0xb9, 0x60, 0x7d, 0x7e, 0xce, 0x43, 0xe7, 0x47, 0x9f, 0x41,
+	0x2d, 0x16, 0xf3, 0x88, 0x87, 0x51, 0xdb, 0x95, 0x95, 0x55, 0x63, 0x81, 0xad, 0xae, 0xed, 0x56,
+	0x2d, 0xed, 0x76, 0xd8, 0x01, 0x07, 0x97, 0xd2, 0x3a, 0x38, 0x67, 0x93, 0xc9, 0x09, 0xd9, 0xc2,
+	0x28, 0xb8, 0x1e, 0x8e, 0x88, 0x75, 0xf8, 0x1e, 0x1c, 0xdc, 0x94, 0x36, 0xa1, 0x76, 0x3c, 0x9c,
+	0x0e, 0x6f, 0x82, 0x31, 0xd9, 0xa2, 0x2d, 0xa8, 0xcf, 0x02, 0x16, 0xcc, 0x26, 0xa3, 0x53, 0x62,
+	0x51, 0x80, 0xea, 0x34, 0x18, 0x8d, 0x02, 0x46, 0x6c, 0x8c, 0x2f, 0xc6, 0xc3, 0xb3, 0xf3, 0x29,
+	0xa9, 0x1c, 0xbe, 0x03, 0x57, 0x3a, 0x0c, 0x93, 0x83, 0xe0, 0x74, 0xc2, 0x02, 0xb2, 0x85, 0x9c,
+	0xcf, 0x13, 0x36, 0x1e, 0x8e, 0xcf, 0x88, 0x45, 0x1b, 0xe0, 0x2a, 0xb1, 0x8d, 0xe1, 0xc7, 0xd3,
+	0x69, 0xc0, 0x48, 0xa5, 0xff, 0xab, 0x02, 0xf6, 0x6c, 0x46, 0x8f, 0xc0, 0x95, 0xaf, 0x09, 0x25,
+	0xd8, 0x9b, 0xf9, 0xf8, 0x74, 0x76, 0x8d, 0x8c, 0x1e, 0xa7, 0xde, 0xfd, 0x66, 0xa4, 0x74, 0xb6,
+	0xa9, 0xde, 0x78, 0x0d, 0xde, 0x58, 0xf4, 0x00, 0x1c, 0xf4, 0x21, 0xdd, 0xc1, 0x8f, 0x86, 0xa5,
+	0x3b, 0xa4, 0x4c, 0x68, 0xf4, 0x01, 0x38, 0xe8, 0x30, 0x25, 0x35, 0xcc, 0xaa, 0xa4, 0xa6, 0xf9,
+	0x68, 0x1f, 0x6a, 0xda, 0x38, 0x94, 0xca, 0xe7, 0x63, 0xc3, 0x89, 0x9d, 0xff, 0x36, 0x72, 0x25,
+	0x1e, 0x8d, 0xa1, 0xf0, 0x86, 0xc7, 0x14, 0x7e, 0xc3, 0x33, 0x47, 0xe0, 0xca, 0x51, 0xd7, 0x4d,
+	0x1a, 0x06, 0xd1, 0x4d, 0x9a, 0x3e, 0x40, 0xb0, 0xbc, 0x72, 0x09, 0x36, 0x1c, 0xa1, 0xc0, 0xe6,
+	0xe0, 0x63, 0xdd, 0x7a, 0x58, 0x55, 0xdd, 0x9b, 0x2e, 0x50, 0x75, 0xff, 0x31, 0xcd, 0x83, 0xda,
+	0x8d, 0x2b, 0xff, 0x1e, 0xbe, 0x56, 0xe5, 0xcf, 0xdb, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2b,
+	0x70, 0xab, 0x9c, 0x37, 0x06, 0x00, 0x00,
 }

@@ -129,15 +129,6 @@ func (p *Person) Init() {
 	p.aliveWill = 0
 }
 
-// Update updates status
-func (p *Person) Update(players []*pb.Player) {
-	for _, player := range players {
-		if p.GetID() == int(player.GetId()) {
-			p.SetIsDead(player.GetIsDead())
-		}
-	}
-}
-
 // ConvertPersoners converts Personers to []*pb.Player
 func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 	players := make([]*pb.Player, len(personers))
@@ -147,6 +138,10 @@ func (p *Person) ConvertPersoners(personers Personers) []*pb.Player {
 			Id:     int32(v.GetID()),
 			Name:   v.GetName(),
 			IsDead: v.GetIsDead(),
+		}
+		if p.GetUUID() == v.GetUUID() {
+			player.Kind = v.GetKind()
+			player.Uuid = v.GetUUID().String()
 		}
 		players[i] = player
 	}
@@ -178,15 +173,27 @@ func (p *Person) UpdateInfo(g *gocui.Gui, players []*pb.Player) {
 		if err != nil {
 			return err
 		}
+		v.Highlight = true
+		v.SelBgColor = gocui.ColorCyan
+		v.SelFgColor = gocui.ColorBlack
 		v.Clear()
-		for _, player := range players {
+		for i, player := range players {
 			fmt.Fprintf(v, "%d: %s ", player.GetId(), player.GetName())
-			if player.GetIsDead() {
-				fmt.Fprint(v, "Dead")
-			} else {
-				fmt.Fprint(v, "Alive")
+			kind, err := consts.GetKind(player.GetKind())
+			if err != nil {
+				return err
 			}
-			fmt.Fprintln(v)
+			fmt.Fprintf(v, "%s ", kind)
+			if player.GetIsDead() {
+				fmt.Fprintln(v, "x")
+			} else {
+				fmt.Fprintln(v, "o")
+			}
+			if player.GetUuid() == p.GetUUID().String() {
+				if err := v.SetCursor(0, i); err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	})
@@ -198,7 +205,9 @@ func (p *Person) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 
 	// If already dead
 	if p.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := p.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -230,7 +239,9 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 
 	// If already dead
 	if p.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := p.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -252,7 +263,7 @@ func (p *Person) MorningAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player
 	// Make player list that excludes myself and dead peoples
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != p.GetID() {
+		if !player.GetIsDead() && player.GetUuid() != p.GetUUID().String() {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}
@@ -298,6 +309,53 @@ func (p *Person) AfterAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) 
 	} else if wonCamp == pb.Camp_EVIL {
 		p.drawAfterView(g, viewmanagers.MainViewID, "You lose", players)
 	}
+}
+
+// RestartAction is action for selecting restard
+func (p *Person) RestartAction(g *gocui.Gui, c pb.WWClient) {
+	p.drawRestartView(g, viewmanagers.DialogViewID, func(g *gocui.Gui, v *gocui.View, isRestart bool) error {
+		req := &pb.RestartRequest{
+			SrcUuid:   p.GetUUID().String(),
+			IsRestart: isRestart,
+		}
+		ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+		defer cancel()
+		_, err := c.Restart(ctx, req)
+		if err != nil {
+			return err
+		}
+		g.DeleteKeybindings(viewmanagers.DialogViewID)
+		v.Highlight = false
+		v.Clear()
+		_, err = viewmanagers.SetCurrentViewOnTop(g, viewmanagers.MainViewID)
+		return err
+	})
+}
+
+func (p *Person) deadAction(g *gocui.Gui, c pb.WWClient) error {
+	req := &pb.DeadRequest{
+		SrcUuid: p.GetUUID().String(),
+	}
+	ctx, cancel := xcontext.WithTimeout(xcontext.Background(), 30*time.Second)
+	defer cancel()
+	_, err := c.Dead(ctx, req)
+	if err != nil {
+		return err
+	}
+	p.drawDeadView(g, viewmanagers.MainViewID)
+	return nil
+}
+
+func (p *Person) drawDeadView(g *gocui.Gui, viewID string) {
+	g.Update(func(g *gocui.Gui) error {
+		v, err := g.View(viewID)
+		if err != nil {
+			return err
+		}
+		v.Clear()
+		fmt.Fprintln(v, "You're already dead")
+		return nil
+	})
 }
 
 func (p *Person) drawSelectablePlayerList(g *gocui.Gui,
@@ -384,6 +442,75 @@ func (p *Person) drawAfterView(g *gocui.Gui, viewID, msg string, players []*pb.P
 				fmt.Fprintf(v, "%d: %s %s %s\n", player.GetId(), player.GetName(), kind, "Alive")
 			}
 		}
+		return nil
+	})
+}
+
+func (p *Person) drawRestartView(g *gocui.Gui, viewID string, onSelected func(*gocui.Gui, *gocui.View, bool) error) {
+	g.Update(func(g *gocui.Gui) error {
+
+		v, err := viewmanagers.SetCurrentViewOnTop(g, viewID)
+		if err != nil {
+			return err
+		}
+		v.Clear()
+		v.Title = "Do you want to restart?"
+		v.Editable = false
+		fmt.Fprintln(v, "Yes")
+		fmt.Fprintln(v, "No")
+		v.Highlight = true
+		v.SelBgColor = gocui.ColorGreen
+		v.SelFgColor = gocui.ColorBlack
+
+		if err := v.SetCursor(0, 0); err != nil {
+			return err
+		}
+
+		err = g.SetKeybinding(
+			viewID,
+			gocui.KeyArrowDown,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				return viewmanagers.CursorDownWithRange(v, 1)
+			},
+		)
+		if err != nil {
+			return err
+		}
+
+		err = g.SetKeybinding(
+			viewID,
+			gocui.KeyArrowUp,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				return viewmanagers.CursorUpWithRange(v, 0)
+			},
+		)
+		if err != nil {
+			return err
+		}
+
+		err = g.SetKeybinding(
+			viewID,
+			gocui.KeyEnter,
+			gocui.ModNone,
+			func(g *gocui.Gui, v *gocui.View) error {
+				index := viewmanagers.GetLineIndex(v)
+				if index > 1 || index < 0 {
+					return nil
+				}
+				if index == 0 {
+					// Yes
+					return onSelected(g, v, true)
+				}
+				// No
+				return onSelected(g, v, false)
+			},
+		)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

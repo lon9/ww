@@ -12,6 +12,8 @@ service WW{
   rpc Protect(ProtectRequest)returns (ProtectResponse);
   rpc Tell(TellRequest)returns (TellResponse);
   rpc Sleep(SleepRequest)returns (SleepResponse);
+  rpc Dead(DeadRequest)returns (DeadResponse);
+  rpc Restart(RestartRequest)returns (RestartResponse);
 }
 
 enum Camp{
@@ -21,7 +23,7 @@ enum Camp{
 
 enum Kind{
   CITIZEN = 0;
-  WAREWOLF = 1;
+  WEREWOLF = 1;
   TELLER = 2;
   KNIGHT = 3;
 }
@@ -93,11 +95,26 @@ message SleepRequest{
 message SleepResponse{
 }
 
+message DeadRequest{
+  string src_uuid = 1;
+}
+
+message DeadResponse{
+}
+
+message RestartRequest{
+  string src_uuid = 1;
+  bool is_restart = 2;
+}
+
+message RestartResponse{
+}
 
 message Player{
   int32 id = 1;
-  Kind kind = 2;
-  Camp camp = 3;
-  bool is_dead = 4;
-  string name = 5;
+  string uuid = 2;
+  Kind kind = 3;
+  Camp camp = 4;
+  bool is_dead = 5;
+  string name = 6;
 }

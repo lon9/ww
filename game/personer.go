@@ -28,7 +28,6 @@ type Personer interface {
 	SetDeadWill(int)
 	IncDeadWill()
 	Init()
-	Update([]*pb.Player)
 	ConvertPersoners(Personers) []*pb.Player
 	ConvertAfter(Personers) []*pb.Player
 
@@ -36,6 +35,7 @@ type Personer interface {
 	MorningAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	NightAction(*gocui.Gui, pb.WWClient, []*pb.Player)
 	AfterAction(*gocui.Gui, pb.WWClient, []*pb.Player)
+	RestartAction(*gocui.Gui, pb.WWClient)
 }
 
 // NewPersoner is constructor for Person
@@ -43,7 +43,7 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 	switch kind {
 	case pb.Kind_CITIZEN:
 		return &Citizen{
-			Person{
+			Person: Person{
 				id:   id,
 				uid:  uuid.Must(uuid.NewV4()),
 				kind: kind,
@@ -51,9 +51,9 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 				name: name,
 			},
 		}
-	case pb.Kind_WAREWOLF:
-		return &Warewolf{
-			Person{
+	case pb.Kind_WEREWOLF:
+		return &Werewolf{
+			Person: Person{
 				id:   id,
 				uid:  uuid.Must(uuid.NewV4()),
 				kind: kind,
@@ -63,7 +63,7 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 		}
 	case pb.Kind_TELLER:
 		return &Teller{
-			Person{
+			Person: Person{
 				id:   id,
 				uid:  uuid.Must(uuid.NewV4()),
 				kind: kind,
@@ -73,7 +73,7 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 		}
 	case pb.Kind_KNIGHT:
 		return &Knight{
-			Person{
+			Person: Person{
 				id:   id,
 				uid:  uuid.Must(uuid.NewV4()),
 				kind: kind,
@@ -83,7 +83,7 @@ func NewPersoner(id int, name string, kind pb.Kind) Personer {
 		}
 	}
 	return &Citizen{
-		Person{
+		Person: Person{
 			id:   id,
 			uid:  uuid.Must(uuid.NewV4()),
 			kind: pb.Kind_CITIZEN,

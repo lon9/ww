@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jroimartin/gocui"
@@ -20,14 +21,16 @@ type Teller struct {
 func (t *Teller) NightAction(g *gocui.Gui, c pb.WWClient, players []*pb.Player) {
 	// If already dead
 	if t.GetIsDead() {
-		viewmanagers.DrawDeadView(g, viewmanagers.MainViewID)
+		if err := t.deadAction(g, c); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
-	// Make player list that excludes myself and dead peoples and my kind
+	// Make player list that excludes myself and dead peoples
 	var selectablePlayers []*pb.Player
 	for _, player := range players {
-		if !player.GetIsDead() && int(player.GetId()) != t.GetID() {
+		if !player.GetIsDead() && player.GetUuid() != t.GetUUID().String() {
 			selectablePlayers = append(selectablePlayers, player)
 		}
 	}

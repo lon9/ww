@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"sync"
 	"time"
@@ -20,7 +19,10 @@ import (
 
 // Client is struct for client
 type Client struct {
-	managers   []viewmanagers.ViewManager
+	// Store front view
+	fragments []viewmanagers.ViewManager
+	// Store front view and dialog view
+	managers   map[string]viewmanagers.ViewManager
 	activeView int
 	players    []*pb.Player
 	state      pb.State
@@ -31,7 +33,8 @@ type Client struct {
 // NewClient is constructor
 func NewClient() *Client {
 	return &Client{
-		mu: new(sync.Mutex),
+		managers: make(map[string]viewmanagers.ViewManager),
+		mu:       new(sync.Mutex),
 	}
 }
 
@@ -47,12 +50,16 @@ func (c *Client) Run(addr, port string) {
 	mainView := viewmanagers.NewMainView(viewmanagers.MainViewID, false)
 	leftView := viewmanagers.NewLeftView(viewmanagers.LeftViewID, false)
 	rightView := viewmanagers.NewRightView(viewmanagers.RightViewID, true)
-	dialogView := viewmanagers.NewDialogView(viewmanagers.DialogViewID, true)
+	dialogView := viewmanagers.NewDialogView(viewmanagers.DialogViewID, true, 1)
 
 	// Add view managers
-	c.managers = append(c.managers, leftView)
-	c.managers = append(c.managers, mainView)
-	c.managers = append(c.managers, rightView)
+	c.fragments = append(c.fragments, leftView)
+	c.fragments = append(c.fragments, mainView)
+	c.fragments = append(c.fragments, rightView)
+	c.managers[viewmanagers.MainViewID] = mainView
+	c.managers[viewmanagers.LeftViewID] = leftView
+	c.managers[viewmanagers.RightViewID] = rightView
+	c.managers[viewmanagers.DialogViewID] = dialogView
 
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorGreen
@@ -85,20 +92,15 @@ func (c *Client) Run(addr, port string) {
 	}
 }
 
+// quit is binded to CtrlC
 func (c *Client) quit(g *gocui.Gui, v *gocui.View) error {
 	fmt.Println("quit")
 	return gocui.ErrQuit
 }
 
-func (c *Client) setCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
-	if _, err := g.SetCurrentView(name); err != nil {
-		return nil, err
-	}
-	return g.SetViewOnTop(name)
-}
-
+// setDefaultView sets view to Default (main_view)
 func (c *Client) setDefaultView(g *gocui.Gui) (*gocui.View, error) {
-	v, err := c.setCurrentViewOnTop(g, viewmanagers.DefaultViewID)
+	v, err := viewmanagers.SetCurrentViewOnTop(g, viewmanagers.DefaultViewID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +108,12 @@ func (c *Client) setDefaultView(g *gocui.Gui) (*gocui.View, error) {
 	return v, nil
 }
 
+// nextView transition a front view
 func (c *Client) nextView(g *gocui.Gui, v *gocui.View) error {
-	nextIndex := (c.activeView + 1) % len(c.managers)
-	manager := c.managers[nextIndex]
+	nextIndex := (c.activeView + 1) % len(c.fragments)
+	manager := c.fragments[nextIndex]
 
-	if _, err := c.setCurrentViewOnTop(g, manager.GetName()); err != nil {
+	if _, err := viewmanagers.SetCurrentViewOnTop(g, manager.GetName()); err != nil {
 		return err
 	}
 
@@ -124,6 +127,7 @@ func (c *Client) nextView(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+// stateLoop receive state from server
 func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 	ctx, cancel := xcontext.WithCancel(xcontext.Background())
 	defer cancel()
@@ -135,27 +139,44 @@ func (c *Client) stateLoop(g *gocui.Gui, client pb.WWClient) {
 	}
 	for {
 		res, err := stream.Recv()
-		if err == io.EOF {
-			// read done.
-			break
-		}
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			break
 		}
 		c.mu.Lock()
 		c.players = res.GetPlayers()
 		c.state = res.GetState()
-		c.personer.Update(c.players)
+		// Update my status
+		for _, v := range c.players {
+			if c.personer.GetUUID().String() == v.GetUuid() {
+				if c.personer.GetKind() != v.GetKind() {
+					// If the kind is change, have to re-instantiate Personer
+					c.personer = game.NewPersoner(int(v.GetId()), v.GetName(), v.GetKind())
+					uid, err := uuid.FromString(v.GetUuid())
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					c.personer.SetUUID(uid)
+				}
+				c.personer.SetID(int(v.GetId()))
+				c.personer.SetIsDead(v.GetIsDead())
+			}
+		}
 		c.mu.Unlock()
 		c.doAction(g, client)
 	}
+	g.Update(func(g *gocui.Gui) error {
+		return gocui.ErrQuit
+	})
 }
 
+// initialize shows dialog to send hello request with the name of a player
 func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 
 	// Connect to server, sending hello request
 	g.Update(func(g *gocui.Gui) error {
-		v, err := c.setCurrentViewOnTop(g, viewmanagers.DialogViewID)
+		v, err := viewmanagers.SetCurrentViewOnTop(g, viewmanagers.DialogViewID)
 		if err != nil {
 			return err
 		}
@@ -174,46 +195,15 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 					return err
 				}
 
-				// Hello request
-				req := &pb.HelloRequest{
-					Name: line,
-				}
-				ctx, cancel := xcontext.WithTimeout(xcontext.Background(), time.Second*30)
-				defer cancel()
-				res, err := client.Hello(ctx, req)
-				if err != nil {
+				if err := c.start(line, g, client); err != nil {
 					return err
 				}
-
-				// Initialize personer
-				c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
-				id, err := uuid.FromString(res.GetUuid())
-				if err != nil {
-					return err
-				}
-				c.personer.SetUUID(id)
 
 				// Reset dialog
 				v.Clear()
 				v.Editable = false
 				g.DeleteKeybindings(viewmanagers.DialogViewID)
 
-				mainView, err := c.setDefaultView(g)
-				if err != nil {
-					return err
-				}
-				kind, err := consts.GetKind(c.personer.GetKind())
-				if err != nil {
-					return err
-				}
-				camp, err := consts.GetCamp(c.personer.GetCamp())
-				if err != nil {
-					return err
-				}
-				fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
-
-				// Start state loop
-				go c.stateLoop(g, client)
 				return nil
 			})
 		if err != nil {
@@ -223,6 +213,49 @@ func (c *Client) initialize(g *gocui.Gui, client pb.WWClient) {
 	})
 }
 
+// start starts connection to server
+func (c *Client) start(name string, g *gocui.Gui, client pb.WWClient) error {
+	// Hello request
+	req := &pb.HelloRequest{
+		Name: name,
+	}
+	ctx, cancel := xcontext.WithTimeout(xcontext.Background(), time.Second*30)
+	defer cancel()
+	res, err := client.Hello(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	// Initialize personer
+	c.personer = game.NewPersoner(int(res.GetId()), res.GetName(), res.GetKind())
+	id, err := uuid.FromString(res.GetUuid())
+	if err != nil {
+		return err
+	}
+	c.personer.SetUUID(id)
+
+	mainView, err := c.setDefaultView(g)
+	if err != nil {
+		return err
+	}
+	mainView.Clear()
+	kind, err := consts.GetKind(c.personer.GetKind())
+	if err != nil {
+		return err
+	}
+	camp, err := consts.GetCamp(c.personer.GetCamp())
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(mainView, "Your job is %s (%s)", kind, camp)
+
+	// Start state loop
+	go c.stateLoop(g, client)
+
+	return nil
+}
+
+// doAction call specific action at the time
 func (c *Client) doAction(g *gocui.Gui, client pb.WWClient) {
 	c.personer.UpdateInfo(g, c.players)
 	// Do specific action
@@ -233,5 +266,7 @@ func (c *Client) doAction(g *gocui.Gui, client pb.WWClient) {
 		c.personer.NightAction(g, client, c.players)
 	case pb.State_AFTER:
 		c.personer.AfterAction(g, client, c.players)
+		c.managers[viewmanagers.DialogViewID].(*viewmanagers.DialogView).Lines = 2
+		c.personer.RestartAction(g, client)
 	}
 }

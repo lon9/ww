@@ -9,11 +9,11 @@ import (
 
 const (
 	// DiscussionTime is duration of discussion
-	DiscussionTime int = 60
+	DiscussionTime int = 0
 	// NumPlayers is the number of players
-	NumPlayers int = 6
-	// NumWarewolf is the number of warewolfs
-	NumWarewolf int = 2
+	NumPlayers int = 5
+	// NumWerewolf is the number of werewolfs
+	NumWerewolf int = 2
 	// NumTeller is the number of fortune tellers
 	NumTeller int = 1
 	// NumKnight is the number of knights
@@ -22,7 +22,7 @@ const (
 
 var kinds = map[pb.Kind]string{
 	pb.Kind_CITIZEN:  "Citizen",
-	pb.Kind_WAREWOLF: "Warewolf",
+	pb.Kind_WEREWOLF: "Werewolf",
 	pb.Kind_TELLER:   "Fortune teller",
 	pb.Kind_KNIGHT:   "Knight",
 }

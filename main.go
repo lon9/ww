@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"flag"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/google/subcommands"
 	"github.com/lon9/ww/client"
@@ -53,6 +55,7 @@ func (cc *clientCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
